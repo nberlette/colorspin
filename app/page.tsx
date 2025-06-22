@@ -1,9 +1,14 @@
-import ColorPaletteGenerator from "@/components/color-palette-generator"
+"use client"
+
+import { ColorPaletteGenerator } from "@/components/color-palette/ColorPaletteGenerator"
+import { ColorPaletteProvider } from "@/context/ColorPaletteContext"
 
 export default function Home() {
   return (
-    <main className="min-h-screen p-8 max-w-5xl mx-auto">
-      <ColorPaletteGenerator />
+    <main className="container mx-auto py-8 px-4">
+      <ColorPaletteProvider>
+        <ColorPaletteGenerator />
+      </ColorPaletteProvider>
     </main>
   )
 }

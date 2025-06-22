@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import type React from "react"
+
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { HexColorPicker } from "react-colorful"
-import { Download, Check, Copy, RefreshCw, AlertCircle, Plus, Trash2, Wand2, Palette, Droplets } from "lucide-react"
+import { Check, Copy, RefreshCw, AlertCircle, Plus, Trash2, Wand2, Palette, Droplets, Eye, Code } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
@@ -15,6 +17,15 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 
 interface ColorShade {
   shade: number
@@ -44,6 +55,7 @@ interface ContrastScore {
 interface GradientStop {
   color: string
   position: number
+  id: string
 }
 
 interface Gradient {
@@ -57,6 +69,237 @@ interface ColorHarmony {
   description: string
   colors: string[]
 }
+
+interface ColorVisionDeficiency {
+  id: string
+  name: string
+  description: string
+  simulationMatrix?: number[]
+  simulationFunction?: (r: number, g: number, b: number) => [number, number, number]
+}
+
+export interface AccessibilityProps {
+  title?: string;
+  activeColorVisionDeficiency?: string;
+  setActiveColorVisionDeficiency?(deficiencyId: string): void;
+}
+
+export function ColorVisionDeficiencySimulator({
+  title = "Color Vision Deficiency Simulation",
+  description = "See how your palette appears to people with different types of color vision deficiencies",
+  activeColorVisionDeficiency = "normal",
+  setActiveColorVisionDeficiency = (value) => {
+    activeColorVisionDeficiency = value;
+  },
+  colorVisionDeficiencies = [],
+  getSimulatedColorShades = [],
+}: AccessibilityProps) {
+
+  return <>
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            {colorVisionDeficiencies.map((deficiency) => (
+              <Button
+                key={deficiency.id}
+                variant={activeColorVisionDeficiency === deficiency.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveColorVisionDeficiency(deficiency.id)}
+                className={deficiency.id === "blurred-vision" && activeColorVisionDeficiency === "blurred-vision" ? "blur-sm" : ""}
+              >
+                {deficiency.name}
+              </Button>
+            ))}
+          </div>
+
+          <div className="border rounded-lg p-4">
+            <h3 className="text-lg font-medium mb-2">
+              {colorVisionDeficiencies.find(d => d.id === activeColorVisionDeficiency)?.name || "Normal Vision"}
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              {colorVisionDeficiencies.find(d => d.id === activeColorVisionDeficiency)?.description || "No color vision deficiency"}
+            </p>
+
+            <div className={`space-y-4 ${activeColorVisionDeficiency === "blurred-vision" ? "blur-sm" : ""}`}>
+
+              <div className="flex h-16 rounded-lg overflow-hidden">
+                {getSimulatedColorShades.map(({ shade, hex }) => (
+                  <div
+                    key={shade}
+                    className="flex-1"
+                    style={{ backgroundColor: hex }}
+                    title={`${shade}: ${hex}`}
+                  />
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                {getSimulatedColorShades.map(({ shade, hex }) => (
+                  <div
+                    key={shade}
+                    className="flex flex-col items-center p-2 border rounded"
+                  >
+                    <div className="w-12 h-12 rounded mb-2" style={{ backgroundColor: hex }} />
+                    <div className="text-xs font-medium">{shade}</div>
+                    <div className="text-xs font-mono">{hex}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border rounded-lg p-3">
+                  <h4 className="text-sm font-medium mb-2">Text Sample</h4>
+                  <div className="space-y-2">
+                    {[900, 800, 700, 600, 500].map((shade) => {
+                      const bgColor = getSimulatedColorShades.find(s => s.shade === 50)?.hex || "#FFFFFF";
+                      const textColor = getSimulatedColorShades.find(s => s.shade === shade)?.hex || "#000000";
+                      return (
+                        <div
+                          key={shade}
+                          className="p-2 rounded"
+                          style={{ backgroundColor: bgColor, color: textColor }}
+                        >
+                          <p className="text-sm">Text with {shade} on 50 background</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-3">
+                  <h4 className="text-sm font-medium mb-2">Button Sample</h4>
+                  <div className="space-y-2">
+                    {[500, 600, 700, 800, 900].map((shade) => {
+                      const bgColor = getSimulatedColorShades.find(s => s.shade === shade)?.hex || "#000000";
+                      const textColor = getSimulatedColorShades.find(s => s.shade === 50)?.hex || "#FFFFFF";
+                      return (
+                        <div
+                          key={shade}
+                          className="p-2 rounded text-center"
+                          style={{ backgroundColor: bgColor, color: textColor }}
+                        >
+                          <p className="text-sm">Text with {shade} on 50 background</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </>;
+}
+
+// Convert hex to HSL - memoized for performance
+const hexToHSL = useCallback((hex: string): [number, number, number] => {
+  // Remove the # if present
+  hex = hex.replace(/^#/, "")
+
+  // Parse the hex values
+  const r = Number.parseInt(hex.substring(0, 2), 16) / 255
+  const g = Number.parseInt(hex.substring(2, 4), 16) / 255
+  const b = Number.parseInt(hex.substring(4, 6), 16) / 255
+
+  // Find min and max values
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+
+  // Calculate lightness
+  let l = (max + min) / 2
+
+  let h = 0
+  let s = 0
+
+  if (max !== min) {
+    // Calculate saturation
+    s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min)
+
+    // Calculate hue
+    if (max === r) {
+      h = (g - b) / (max - min) + (g < b ? 6 : 0)
+    } else if (max === g) {
+      h = (b - r) / (max - min) + 2
+    } else {
+      h = (r - g) / (max - min) + 4
+    }
+    h /= 6
+  }
+
+  // Convert to degrees, percentage, percentage
+  h = Math.round(h * 360)
+  s = Math.round(s * 100)
+  l = Math.round(l * 100)
+
+  return [h, s, l]
+}, [])
+
+// Convert HSL to hex - memoized for performance
+const hslToHex = useCallback((h: number, s: number, l: number): string => {
+  h /= 360
+  s /= 100
+  l /= 100
+
+  let r, g, b
+
+  if (s === 0) {
+    r = g = b = l
+  } else {
+    const hue2rgb = (p: number, q: number, t: number) => {
+      if (t < 0) t += 1
+      if (t > 1) t -= 1
+      if (t < 1 / 6) return p + (q - p) * 6 * t
+      if (t < 1 / 2) return q
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+      return p
+    }
+
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+    const p = 2 * l - q
+
+    r = hue2rgb(p, q, h + 1 / 3)
+    g = hue2rgb(p, q, h)
+    b = hue2rgb(p, q, h - 1 / 3)
+  }
+
+  const toHex = (x: number) => {
+    const hex = Math.round(x * 255).toString(16)
+    return hex.length === 1 ? "0" + hex : hex
+  }
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
+}, [])
+
+// Convert hex to RGB
+const hexToRGB = useCallback((hex: string): [number, number, number] => {
+  // Remove the # if present
+  hex = hex.replace(/^#/, "")
+
+  // Parse the hex values
+  const r = Number.parseInt(hex.substring(0, 2), 16)
+  const g = Number.parseInt(hex.substring(2, 4), 16)
+  const b = Number.parseInt(hex.substring(4, 6), 16)
+
+  return [r, g, b]
+}, [])
+
+// Convert RGB to hex
+const rgbToHex = useCallback((r: number, g: number, b: number): string => {
+  const toHex = (x: number) => {
+    const hex = Math.max(0, Math.min(255, Math.round(x))).toString(16)
+    return hex.length === 1 ? "0" + hex : hex
+  }
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
+}, []);
 
 export default function ColorPaletteGenerator() {
   // State for multiple color sets
@@ -78,11 +321,17 @@ export default function ColorPaletteGenerator() {
   const [activeGradient, setActiveGradient] = useState<Gradient>({
     type: "linear",
     stops: [
-      { color: "#15437F", position: 0 },
-      { color: "#3B82F6", position: 100 },
+      { color: "#15437F", position: 0, id: "stop-1" },
+      { color: "#3B82F6", position: 100, id: "stop-2" },
     ],
     angle: 90,
   })
+  const [isDraggingStop, setIsDraggingStop] = useState(false)
+  const [activeStopId, setActiveStopId] = useState<string | null>(null)
+  const gradientPreviewRef = useRef<HTMLDivElement>(null)
+
+  // State for color vision deficiency simulation
+  const [activeColorVisionDeficiency, setActiveColorVisionDeficiency] = useState<string>("normal")
 
   // Initialize dark mode state
   const [isDarkMode, setIsDarkMode] = useState(true)
@@ -91,6 +340,10 @@ export default function ColorPaletteGenerator() {
 
   // Active tab state
   const [activeTab, setActiveTab] = useState("palette")
+
+  // Export format state
+  const [exportFormat, setExportFormat] = useState<string>("css")
+  const [exportCode, setExportCode] = useState<string>("")
 
   // Initialize with a default color set
   useEffect(() => {
@@ -140,6 +393,42 @@ export default function ColorPaletteGenerator() {
       )
     }
   }, [baseColor, vibrancy, hueShift, colorShades, colorSetName, activeColorSetId])
+
+  // Handle gradient stop dragging
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDraggingStop && activeStopId && gradientPreviewRef.current) {
+        const rect = gradientPreviewRef.current.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const width = rect.width
+        
+        // Calculate position as percentage (clamped between 0-100)
+        const position = Math.max(0, Math.min(100, (x / width) * 100))
+        
+        setActiveGradient(prev => ({
+          ...prev,
+          stops: prev.stops.map(stop => 
+            stop.id === activeStopId ? { ...stop, position } : stop
+          )
+        }))
+      }
+    }
+    
+    const handleMouseUp = () => {
+      setIsDraggingStop(false)
+      setActiveStopId(null)
+    }
+    
+    if (isDraggingStop) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDraggingStop, activeStopId])
 
   // Generate a unique ID
   const generateId = () => {
@@ -198,85 +487,6 @@ export default function ColorPaletteGenerator() {
     setColorSetName(name)
     setColorSets((prevSets) => prevSets.map((set) => (set.id === activeColorSetId ? { ...set, name } : set)))
   }
-
-  // Convert hex to HSL - memoized for performance
-  const hexToHSL = useCallback((hex: string): [number, number, number] => {
-    // Remove the # if present
-    hex = hex.replace(/^#/, "")
-
-    // Parse the hex values
-    const r = Number.parseInt(hex.substring(0, 2), 16) / 255
-    const g = Number.parseInt(hex.substring(2, 4), 16) / 255
-    const b = Number.parseInt(hex.substring(4, 6), 16) / 255
-
-    // Find min and max values
-    const max = Math.max(r, g, b)
-    const min = Math.min(r, g, b)
-
-    // Calculate lightness
-    let l = (max + min) / 2
-
-    let h = 0
-    let s = 0
-
-    if (max !== min) {
-      // Calculate saturation
-      s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min)
-
-      // Calculate hue
-      if (max === r) {
-        h = (g - b) / (max - min) + (g < b ? 6 : 0)
-      } else if (max === g) {
-        h = (b - r) / (max - min) + 2
-      } else {
-        h = (r - g) / (max - min) + 4
-      }
-      h /= 6
-    }
-
-    // Convert to degrees, percentage, percentage
-    h = Math.round(h * 360)
-    s = Math.round(s * 100)
-    l = Math.round(l * 100)
-
-    return [h, s, l]
-  }, [])
-
-  // Convert HSL to hex - memoized for performance
-  const hslToHex = useCallback((h: number, s: number, l: number): string => {
-    h /= 360
-    s /= 100
-    l /= 100
-
-    let r, g, b
-
-    if (s === 0) {
-      r = g = b = l
-    } else {
-      const hue2rgb = (p: number, q: number, t: number) => {
-        if (t < 0) t += 1
-        if (t > 1) t -= 1
-        if (t < 1 / 6) return p + (q - p) * 6 * t
-        if (t < 1 / 2) return q
-        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
-        return p
-      }
-
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s
-      const p = 2 * l - q
-
-      r = hue2rgb(p, q, h + 1 / 3)
-      g = hue2rgb(p, q, h)
-      b = hue2rgb(p, q, h - 1 / 3)
-    }
-
-    const toHex = (x: number) => {
-      const hex = Math.round(x * 255).toString(16)
-      return hex.length === 1 ? "0" + hex : hex
-    }
-
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
-  }, [])
 
   // Generate color shades - memoized to prevent unnecessary recalculations
   const generateColorShades = useCallback(() => {
@@ -386,100 +596,6 @@ export default function ColorPaletteGenerator() {
       description: `${hex} has been copied to your clipboard.`,
       duration: 1000,
     })
-  }
-
-  // Download palette as JSON
-  const downloadPalette = () => {
-    const palette = colorSets.reduce(
-      (acc, colorSet) => {
-        acc[colorSet.name] = colorSet.shades.reduce(
-          (shadeAcc, { shade, hex }) => {
-            shadeAcc[shade] = hex
-            return shadeAcc
-          },
-          {} as Record<number, string>,
-        )
-        return acc
-      },
-      {} as Record<string, Record<number, string>>,
-    )
-
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(palette, null, 2))
-    const downloadAnchorNode = document.createElement("a")
-    downloadAnchorNode.setAttribute("href", dataStr)
-    downloadAnchorNode.setAttribute("download", `palette-${new Date().getTime()}.json`)
-    document.body.appendChild(downloadAnchorNode)
-    downloadAnchorNode.click()
-    downloadAnchorNode.remove()
-  }
-
-  // Download palette as CSS
-  const downloadCSS = () => {
-    let css = `:root {\n`
-
-    colorSets.forEach((colorSet) => {
-      const safeName = colorSet.name.toLowerCase().replace(/\s+/g, "-")
-      colorSet.shades.forEach(({ shade, hex }) => {
-        css += `  --color-${safeName}-${shade}: ${hex};\n`
-      })
-    })
-
-    // Add gradients if any
-    if (gradients.length > 0) {
-      css += `\n  /* Gradients */\n`
-      gradients.forEach((gradient, index) => {
-        if (gradient.type === "linear") {
-          css += `  --gradient-${index + 1}: linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`
-        } else {
-          css += `  --gradient-${index + 1}: radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`
-        }
-      })
-    }
-
-    css += `}\n`
-
-    const dataStr = "data:text/css;charset=utf-8," + encodeURIComponent(css)
-    const downloadAnchorNode = document.createElement("a")
-    downloadAnchorNode.setAttribute("href", dataStr)
-    downloadAnchorNode.setAttribute("download", `palette-${new Date().getTime()}.css`)
-    document.body.appendChild(downloadAnchorNode)
-    downloadAnchorNode.click()
-    downloadAnchorNode.remove()
-  }
-
-  // Download palette as Tailwind config
-  const downloadTailwindConfig = () => {
-    const colors = colorSets.reduce(
-      (acc, colorSet) => {
-        const safeName = colorSet.name.toLowerCase().replace(/\s+/g, "-")
-        acc[safeName] = colorSet.shades.reduce(
-          (shadeAcc, { shade, hex }) => {
-            shadeAcc[shade] = hex
-            return shadeAcc
-          },
-          {} as Record<number, string>,
-        )
-        return acc
-      },
-      {} as Record<string, Record<number, string>>,
-    )
-
-    const config = `/** @type {import('tailwindcss').Config} */
-module.exports = {
-  theme: {
-    extend: {
-      colors: ${JSON.stringify(colors, null, 6).replace(/"([^"]+)":/g, "$1:")}
-    }
-  }
-}`
-
-    const dataStr = "data:text/javascript;charset=utf-8," + encodeURIComponent(config)
-    const downloadAnchorNode = document.createElement("a")
-    downloadAnchorNode.setAttribute("href", dataStr)
-    downloadAnchorNode.setAttribute("download", `tailwind-config-${new Date().getTime()}.js`)
-    document.body.appendChild(downloadAnchorNode)
-    downloadAnchorNode.click()
-    downloadAnchorNode.remove()
   }
 
   // Format and validate hex value - memoized for performance
@@ -721,12 +837,63 @@ module.exports = {
         ],
       },
       {
+        name: "Square",
+        description: "Four colors evenly spaced around the color wheel",
+        colors: [
+          baseColor,
+          hslToHex((hue + 90) % 360, saturation, lightness),
+          hslToHex((hue + 180) % 360, saturation, lightness),
+          hslToHex((hue + 270) % 360, saturation, lightness),
+        ],
+      },
+      {
+        name: "Rectangle",
+        description: "Two complementary pairs with different spacing",
+        colors: [
+          baseColor,
+          hslToHex((hue + 60) % 360, saturation, lightness),
+          hslToHex((hue + 180) % 360, saturation, lightness),
+          hslToHex((hue + 240) % 360, saturation, lightness),
+        ],
+      },
+      {
+        name: "Compound",
+        description: "A mix of complementary and analogous colors",
+        colors: [
+          baseColor,
+          hslToHex((hue + 30) % 360, saturation, lightness),
+          hslToHex((hue + 180) % 360, saturation, Math.max(lightness - 10, 10)),
+          hslToHex((hue + 210) % 360, saturation, lightness),
+        ],
+      },
+      {
         name: "Monochromatic",
         description: "Different shades and tints of the same color",
         colors: [
           hslToHex(hue, saturation, Math.max(lightness - 30, 10)),
           baseColor,
+          hslToHex(hue, Math.max(saturation - 20, 10), lightness),
           hslToHex(hue, saturation, Math.min(lightness + 30, 90)),
+        ],
+      },
+      {
+        name: "Shades",
+        description: "Variations of lightness of the same color",
+        colors: [
+          hslToHex(hue, saturation, 80),
+          hslToHex(hue, saturation, 60),
+          hslToHex(hue, saturation, 40),
+          hslToHex(hue, saturation, 20),
+        ],
+      },
+      {
+        name: "Custom",
+        description: "Custom harmony with golden ratio spacing",
+        colors: [
+          baseColor,
+          hslToHex((hue + 38) % 360, saturation, lightness),
+          hslToHex((hue + 76) % 360, saturation, lightness),
+          hslToHex((hue + 114) % 360, saturation, lightness),
         ],
       },
     ]
@@ -762,8 +929,8 @@ module.exports = {
     setActiveGradient({
       type: "linear",
       stops: [
-        { color: colorShades[1]?.hex || "#FFFFFF", position: 0 },
-        { color: colorShades[7]?.hex || "#000000", position: 100 },
+        { color: colorShades[1]?.hex || "#FFFFFF", position: 0, id: generateId() },
+        { color: colorShades[7]?.hex || "#000000", position: 100, id: generateId() },
       ],
       angle: 90,
     })
@@ -776,21 +943,19 @@ module.exports = {
   }
 
   // Update a gradient stop
-  const updateGradientStop = (index: number, color: string, position?: number) => {
-    const newStops = [...activeGradient.stops]
-
-    if (color) {
-      newStops[index] = { ...newStops[index], color }
-    }
-
-    if (position !== undefined) {
-      newStops[index] = { ...newStops[index], position }
-    }
-
-    setActiveGradient({
-      ...activeGradient,
-      stops: newStops,
-    })
+  const updateGradientStop = (id: string, color?: string, position?: number) => {
+    setActiveGradient(prev => ({
+      ...prev,
+      stops: prev.stops.map(stop => 
+        stop.id === id 
+          ? { 
+              ...stop, 
+              ...(color !== undefined ? { color } : {}),
+              ...(position !== undefined ? { position } : {})
+            } 
+          : stop
+      )
+    }))
   }
 
   // Add a gradient stop
@@ -820,12 +985,12 @@ module.exports = {
 
     setActiveGradient({
       ...activeGradient,
-      stops: [...activeGradient.stops, { color: newColor, position: newPosition }],
+      stops: [...activeGradient.stops, { color: newColor, position: newPosition, id: generateId() }],
     })
   }
 
   // Remove a gradient stop
-  const removeGradientStop = (index: number) => {
+  const removeGradientStop = (id: string) => {
     if (activeGradient.stops.length <= 2) {
       toast({
         title: "Cannot Remove Stop",
@@ -835,7 +1000,7 @@ module.exports = {
       return
     }
 
-    const newStops = activeGradient.stops.filter((_, i) => i !== index)
+    const newStops = activeGradient.stops.filter(stop => stop.id !== id)
     setActiveGradient({
       ...activeGradient,
       stops: newStops,
@@ -867,6 +1032,366 @@ module.exports = {
     })
   }
 
+  // Start dragging a gradient stop
+  const startDraggingStop = (id: string) => {
+    setIsDraggingStop(true)
+    setActiveStopId(id)
+  }
+
+  // Handle angle adjustment for linear gradients
+  const handleAngleAdjustment = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (activeGradient.type !== 'linear' || !gradientPreviewRef.current) return
+    
+    const rect = gradientPreviewRef.current.getBoundingClientRect()
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+    
+    // Calculate angle based on mouse position relative to center
+    const dx = e.clientX - centerX
+    const dy = e.clientY - centerY
+    const angle = Math.round(Math.atan2(dy, dx) * (180 / Math.PI) + 90) % 360
+    
+    setActiveGradient(prev => ({
+      ...prev,
+      angle
+    }))
+  }
+
+  // Color vision deficiency simulation
+  const colorVisionDeficiencies: ColorVisionDeficiency[] = [
+    {
+      id: "normal",
+      name: "Normal Vision",
+      description: "No color vision deficiency",
+    },
+    {
+      id: "protanopia",
+      name: "Protanopia",
+      description: "Red-blind (absence of red retinal photoreceptors)",
+      simulationMatrix: [0.567, 0.433, 0, 0.558, 0.442, 0, 0, 0.242, 0.758],
+    },
+    {
+      id: "deuteranopia",
+      name: "Deuteranopia",
+      description: "Green-blind (absence of green retinal photoreceptors)",
+      simulationMatrix: [0.625, 0.375, 0, 0.7, 0.3, 0, 0, 0.3, 0.7],
+    },
+    {
+      id: "tritanopia",
+      name: "Tritanopia",
+      description: "Blue-blind (absence of blue retinal photoreceptors)",
+      simulationMatrix: [0.95, 0.05, 0, 0, 0.433, 0.567, 0, 0.475, 0.525],
+    },
+    {
+      id: "protanomaly",
+      name: "Protanomaly",
+      description: "Red-weak (anomalous red retinal photoreceptors)",
+      simulationMatrix: [0.817, 0.183, 0, 0.333, 0.667, 0, 0, 0.125, 0.875],
+    },
+    {
+      id: "deuteranomaly",
+      name: "Deuteranomaly",
+      description: "Green-weak (anomalous green retinal photoreceptors)",
+      simulationMatrix: [0.8, 0.2, 0, 0.258, 0.742, 0, 0, 0.142, 0.858],
+    },
+    {
+      id: "tritanomaly",
+      name: "Tritanomaly",
+      description: "Blue-weak (anomalous blue retinal photoreceptors)",
+      simulationMatrix: [0.967, 0.033, 0, 0, 0.733, 0.267, 0, 0.183, 0.817],
+    },
+    {
+      id: "achromatopsia",
+      name: "Achromatopsia",
+      description: "Complete color blindness (monochromacy)",
+      simulationFunction: (r, g, b) => {
+        const avg = (r * 0.299 + g * 0.587 + b * 0.114);
+        return [avg, avg, avg];
+      },
+    },
+    {
+      id: "low-contrast",
+      name: "Low Contrast",
+      description: "Reduced contrast sensitivity",
+      simulationFunction: (r, g, b) => {
+        const avg = (r * 0.299 + g * 0.587 + b * 0.114);
+        return [
+          r * 0.7 + avg * 0.3,
+          g * 0.7 + avg * 0.3,
+          b * 0.7 + avg * 0.3
+        ];
+      },
+    },
+    {
+      id: "blurred-vision",
+      name: "Blurred Vision",
+      description: "Simulates blurred vision",
+      // This is just a placeholder - actual blur would be applied via CSS
+    }
+  ];
+
+  // Apply color vision deficiency simulation to a color
+  const simulateColorVisionDeficiency = useCallback((hex: string, deficiencyId: string): string => {
+    if (deficiencyId === "normal") return hex;
+    
+    const deficiency = colorVisionDeficiencies.find(d => d.id === deficiencyId);
+    if (!deficiency) return hex;
+    
+    const [r, g, b] = hexToRGB(hex);
+    
+    if (deficiency.simulationFunction) {
+      const [newR, newG, newB] = deficiency.simulationFunction(r, g, b);
+      return rgbToHex(newR, newG, newB);
+    }
+    
+    if (deficiency.simulationMatrix) {
+      const m = deficiency.simulationMatrix;
+      const newR = r * m[0] + g * m[1] + b * m[2];
+      const newG = r * m[3] + g * m[4] + b * m[5];
+      const newB = r * m[6] + g * m[7] + b * m[8];
+      return rgbToHex(newR, newG, newB);
+    }
+    
+    return hex;
+  }, [hexToRGB, rgbToHex]);
+
+  // Apply simulation to all colors in a shade
+  const getSimulatedColorShades = useMemo(() => {
+    if (activeColorVisionDeficiency === "normal") return colorShades;
+    
+    return colorShades.map(shade => ({
+      ...shade,
+      hex: simulateColorVisionDeficiency(shade.hex, activeColorVisionDeficiency)
+    }));
+  }, [colorShades, activeColorVisionDeficiency, simulateColorVisionDeficiency]);
+
+  // Generate export code based on format
+  const generateExportCode = useCallback(() => {
+    const colorSetsForExport = colorSets.map(set => ({
+      name: set.name.toLowerCase().replace(/\s+/g, "-"),
+      shades: set.shades.reduce((acc, { shade, hex }) => {
+        acc[shade] = hex;
+        return acc;
+      }, {} as Record<number, string>)
+    }));
+
+    let code = '';
+
+    switch (exportFormat) {
+      case 'css':
+        code = `:root {\n`;
+        colorSetsForExport.forEach(set => {
+          Object.entries(set.shades).forEach(([shade, hex]) => {
+            code += `  --color-${set.name}-${shade}: ${hex};\n`;
+          });
+        });
+        
+        // Add gradients if any
+        if (gradients.length > 0) {
+          code += `\n  /* Gradients */\n`;
+          gradients.forEach((gradient, index) => {
+            if (gradient.type === "linear") {
+              code += `  --gradient-${index + 1}: linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+            } else {
+              code += `  --gradient-${index + 1}: radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+            }
+          });
+        }
+        
+        code += `}\n`;
+        break;
+        
+      case 'scss':
+        colorSetsForExport.forEach(set => {
+          Object.entries(set.shades).forEach(([shade, hex]) => {
+            code += `$color-${set.name}-${shade}: ${hex};\n`;
+          });
+          code += '\n';
+        });
+        
+        // Add gradients if any
+        if (gradients.length > 0) {
+          code += `// Gradients\n`;
+          gradients.forEach((gradient, index) => {
+            if (gradient.type === "linear") {
+              code += `$gradient-${index + 1}: linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+            } else {
+              code += `$gradient-${index + 1}: radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+            }
+          });
+        }
+        break;
+        
+      case 'less':
+        colorSetsForExport.forEach(set => {
+          Object.entries(set.shades).forEach(([shade, hex]) => {
+            code += `@color-${set.name}-${shade}: ${hex};\n`;
+          });
+          code += '\n';
+        });
+        
+        // Add gradients if any
+        if (gradients.length > 0) {
+          code += `// Gradients\n`;
+          gradients.forEach((gradient, index) => {
+            if (gradient.type === "linear") {
+              code += `@gradient-${index + 1}: linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+            } else {
+              code += `@gradient-${index + 1}: radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+            }
+          });
+        }
+        break;
+        
+      case 'tailwind':
+        code = `/** @type {import('tailwindcss').Config} */\nmodule.exports = {\n  theme: {\n    extend: {\n      colors: {\n`;
+        
+        colorSetsForExport.forEach(set => {
+          code += `        '${set.name}': {\n`;
+          Object.entries(set.shades).forEach(([shade, hex]) => {
+            code += `          '${shade}': '${hex}',\n`;
+          });
+          code += `        },\n`;
+        });
+        
+        code += `      },\n`;
+        
+        // Add gradients as background utilities
+        if (gradients.length > 0) {
+          code += `      backgroundImage: {\n`;
+          gradients.forEach((gradient, index) => {
+            if (gradient.type === "linear") {
+              code += `        'gradient-${index + 1}': 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+            } else {
+              code += `        'gradient-${index + 1}': 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+            }
+          });
+          code += `      },\n`;
+        }
+        
+        code += `    },\n  },\n};\n`;
+        break;
+        
+      case 'unocss':
+        code = `// UnoCSS theme configuration\nexport default {\n  theme: {\n    colors: {\n`;
+        
+        colorSetsForExport.forEach(set => {
+          code += `      '${set.name}': {\n`;
+          Object.entries(set.shades).forEach(([shade, hex]) => {
+            code += `        '${shade}': '${hex}',\n`;
+          });
+          code += `      },\n`;
+        });
+        
+        code += `    },\n`;
+        
+        // Add gradients
+        if (gradients.length > 0) {
+          code += `    backgroundImage: {\n`;
+          gradients.forEach((gradient, index) => {
+            if (gradient.type === "linear") {
+              code += `      'gradient-${index + 1}': 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+            } else {
+              code += `      'gradient-${index + 1}': 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+            }
+          });
+          code += `    },\n`;
+        }
+        
+        code += `  },\n};\n`;
+        break;
+        
+      case 'chakra':
+        code = `// Chakra UI theme colors\nexport const colors = {\n`;
+        
+        colorSetsForExport.forEach(set => {
+          code += `  ${set.name}: {\n`;
+          Object.entries(set.shades).forEach(([shade, hex]) => {
+            code += `    ${shade}: '${hex}',\n`;
+          });
+          code += `  },\n`;
+        });
+        
+        code += `};\n\n`;
+        
+        // Add gradients as custom styles
+        if (gradients.length > 0) {
+          code += `// Custom gradients for Chakra UI\nexport const gradients = {\n`;
+          gradients.forEach((gradient, index) => {
+            if (gradient.type === "linear") {
+              code += `  gradient${index + 1}: 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+            } else {
+              code += `  gradient${index + 1}: 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+            }
+          });
+          code += `};\n`;
+        }
+        break;
+        
+      case 'mui':
+        code = `// Material UI theme colors\nimport { createTheme } from '@mui/material/styles';\n\nconst theme = createTheme({\n  palette: {\n`;
+        
+        colorSetsForExport.forEach(set => {
+          code += `    ${set.name}: {\n`;
+          Object.entries(set.shades).forEach(([shade, hex]) => {
+            if (shade === '500') {
+              code += `      main: '${hex}',\n`;
+            } else if (shade === '300') {
+              code += `      light: '${hex}',\n`;
+            } else if (shade === '700') {
+              code += `      dark: '${hex}',\n`;
+            } else {
+              code += `      ${shade}: '${hex}',\n`;
+            }
+          });
+          code += `    },\n`;
+        });
+        
+        code += `  },\n});\n\n`;
+        
+        // Add gradients as custom styles
+        if (gradients.length > 0) {
+          code += `// Custom gradients for Material UI\nconst gradients = {\n`;
+          gradients.forEach((gradient, index) => {
+            if (gradient.type === "linear") {
+              code += `  gradient${index + 1}: 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+            } else {
+              code += `  gradient${index + 1}: 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+            }
+          });
+          code += `};\n`;
+        }
+        break;
+        
+      case 'json':
+        const jsonData = {
+          colors: colorSetsForExport.reduce((acc, set) => {
+            acc[set.name] = set.shades;
+            return acc;
+          }, {} as Record<string, Record<number, string>>),
+          gradients: gradients.map((gradient, index) => ({
+            name: `gradient-${index + 1}`,
+            type: gradient.type,
+            angle: gradient.angle,
+            stops: gradient.stops.map(stop => ({
+              color: stop.color,
+              position: stop.position
+            }))
+          }))
+        };
+        
+        code = JSON.stringify(jsonData, null, 2);
+        break;
+    }
+
+    setExportCode(code);
+  }, [colorSets, gradients, exportFormat]);
+
+  // Update export code when format changes
+  useEffect(() => {
+    generateExportCode();
+  }, [exportFormat, generateExportCode]);
+
   return (
     <div className="space-y-8">
       <motion.div
@@ -896,17 +1421,71 @@ module.exports = {
             <Label htmlFor="dark-mode">Dark Mode</Label>
           </motion.div>
 
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button variant="outline" size="icon" onClick={downloadPalette}>
-              <Download className="h-4 w-4" />
-              <span className="sr-only">Download JSON</span>
-            </Button>
-          </motion.div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Code className="h-4 w-4" />
+                <span>Export</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Export Palette</DialogTitle>
+                <DialogDescription>
+                  Export your color palette in various formats for use in your projects.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="export-format" className="min-w-24">Format:</Label>
+                  <Select value={exportFormat} onValueChange={setExportFormat}>
+                    <SelectTrigger id="export-format" className="w-full">
+                      <SelectValue placeholder="Select format" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="css">CSS Variables</SelectItem>
+                      <SelectItem value="scss">SCSS Variables</SelectItem>
+                      <SelectItem value="less">Less Variables</SelectItem>
+                      <SelectItem value="tailwind">Tailwind Config</SelectItem>
+                      <SelectItem value="unocss">UnoCSS Theme</SelectItem>
+                      <SelectItem value="chakra">Chakra UI Theme</SelectItem>
+                      <SelectItem value="mui">Material UI Theme</SelectItem>
+                      <SelectItem value="json">JSON</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="export-code">Code:</Label>
+                  <Textarea
+                    id="export-code"
+                    value={exportCode}
+                    readOnly
+                    className="font-mono text-sm h-64"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText(exportCode);
+                      toast({
+                        title: "Copied to clipboard",
+                        description: "Export code has been copied to your clipboard",
+                        duration: 1500,
+                      });
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy to Clipboard
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </motion.div>
 
       <Tabs defaultValue="palette" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4">
+        <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="palette" className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
             <span>Palette</span>
@@ -916,8 +1495,12 @@ module.exports = {
             <span>Color Harmonies</span>
           </TabsTrigger>
           <TabsTrigger value="gradients" className="flex items-center gap-2">
-            <Droplets className="h-4 w-4" />
+   z         <Droplets className="h-4 w-4" />
             <span>Gradients</span>
+          </TabsTrigger>
+          <TabsTrigger value="accessibility" className="flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            <span>Accessibility</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1116,7 +1699,7 @@ module.exports = {
                 transition={{ duration: 0.3, delay: 0.3 }}
                 whileHover={{ boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
               >
-                {colorShades.map(({ shade, hex }, index) => (
+                {getSimulatedColorShades.map(({ shade, hex }, index) => (
                   <motion.div
                     key={shade}
                     className="flex-1"
@@ -1262,7 +1845,7 @@ module.exports = {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              {colorShades.map(({ shade, hex, hue, saturation, lightness }, index) => (
+              {getSimulatedColorShades.map(({ shade, hex, hue, saturation, lightness }, index) => (
                 <motion.div
                   key={shade}
                   className="flex items-center p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
@@ -1465,12 +2048,48 @@ module.exports = {
                 </Button>
               </div>
 
-              <div className="h-32 rounded-lg mb-4" style={{ background: getGradientCSS() }} />
+              {/* Interactive gradient preview */}
+              <div 
+                ref={gradientPreviewRef}
+                className="h-32 rounded-lg mb-4 relative cursor-pointer" 
+                style={{ background: getGradientCSS() }}
+                onClick={activeGradient.type === 'linear' ? handleAngleAdjustment : undefined}
+              >
+                {/* Gradient stops */}
+                {activeGradient.stops.map((stop) => (
+                  <div
+                    key={stop.id}
+                    className="absolute bottom-0 w-4 h-4 bg-white border border-gray-400 rounded-full -translate-x-1/2 translate-y-1/2 cursor-move hover:scale-125 transition-transform"
+                    style={{ left: `${stop.position}%`, backgroundColor: stop.color }}
+                    onMouseDown={() => startDraggingStop(stop.id)}
+                    title={`${stop.color} at ${stop.position}%`}
+                  />
+                ))}
+                
+                {/* Angle indicator for linear gradients */}
+                {activeGradient.type === 'linear' && (
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    title={`${activeGradient.angle}°`}
+                  >
+                    <div className="relative w-16 h-16">
+                      <div 
+                        className="absolute w-1 h-16 bg-white/50 rounded-full left-1/2 top-0 -translate-x-1/2 origin-bottom"
+                        style={{ transform: `rotate(${activeGradient.angle}deg)` }}
+                      />
+                      <div 
+                        className="absolute w-4 h-4 bg-white border-2 border-black dark:border-white rounded-full left-1/2 top-0 -translate-x-1/2 -translate-y-1/2"
+                        style={{ transform: `rotate(0deg) translate(0, 0) rotate(${activeGradient.angle}deg) translate(0, -32px)` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="space-y-3">
                 <h4 className="text-sm font-medium">Color Stops</h4>
-                {activeGradient.stops.map((stop, index) => (
-                  <div key={index} className="flex items-center gap-3">
+                {activeGradient.stops.map((stop) => (
+                  <div key={stop.id} className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded" style={{ backgroundColor: stop.color }} />
                     <Popover>
                       <PopoverTrigger asChild>
@@ -1480,23 +2099,23 @@ module.exports = {
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <div className="p-3">
-                          <HexColorPicker color={stop.color} onChange={(color) => updateGradientStop(index, color)} />
+                          <HexColorPicker color={stop.color} onChange={(color) => updateGradientStop(stop.id, color)} />
                         </div>
                       </PopoverContent>
                     </Popover>
 
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <Label htmlFor={`position-${index}`} className="text-xs w-16">
+                        <Label htmlFor={`position-${stop.id}`} className="text-xs w-16">
                           Position:
                         </Label>
                         <Slider
-                          id={`position-${index}`}
+                          id={`position-${stop.id}`}
                           value={[stop.position]}
                           min={0}
                           max={100}
                           step={1}
-                          onValueChange={(value) => updateGradientStop(index, stop.color, value[0])}
+                          onValueChange={(value) => updateGradientStop(stop.id, undefined, value[0])}
                         />
                         <span className="text-xs w-8">{stop.position}%</span>
                       </div>
@@ -1505,7 +2124,7 @@ module.exports = {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => removeGradientStop(index)}
+                      onClick={() => removeGradientStop(stop.id)}
                       className="text-gray-500 hover:text-red-500"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -1572,26 +2191,18 @@ module.exports = {
               </div>
             </div>
           )}
+        </TabsContent>
 
-          <div className="mt-6">
-            <h3 className="text-lg font-bold mb-4">Export Options</h3>
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={downloadCSS} variant="outline">
-                <Download className="h-4 w-4 mr-1" />
-                Download CSS
-              </Button>
-              <Button onClick={downloadTailwindConfig} variant="outline">
-                <Download className="h-4 w-4 mr-1" />
-                Download Tailwind Config
-              </Button>
-              <Button onClick={downloadPalette} variant="outline">
-                <Download className="h-4 w-4 mr-1" />
-                Download JSON
-              </Button>
-            </div>
-          </div>
+        <TabsContent value="accessibility" className="space-y-6">
+          <ColorVisionDeficiencySimulator {{
+            getSimulatedColorShades,
+            activeColorVisionDeficiency,
+            setActiveColorVisionDeficiency,
+            simulateColorVisionDeficiency,
+            
+          }} />
         </TabsContent>
       </Tabs>
     </div>
-  )
-}
+  );
+};
