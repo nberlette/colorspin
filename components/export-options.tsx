@@ -104,4 +104,4 @@ export function ExportOptions({ colors, className }: ExportOptionsProps) {
         >
           <TabsList className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
             {exportFormats.map((format) => (
-              <TabsTrigger key={format.id} value={format.id}>\
+              <TabsTrigger key={format.id} value={format.id}>
