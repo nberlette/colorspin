@@ -458,9 +458,9 @@ export class ExportFormatter {
   }
 }
 
-const getPlugin = async (p: string) => await dprint.createStreaming(await globalThis.fetch(`https://dprint.deno.dev/${p}.wasm`));
+const getPlugin = async (p: string) => await dprint.createStreaming(await globalThis.fetch(`https://dprint.deno.dev/plugins/${p}.wasm`));
 
-ExportFormatter.fmt.ts = await getPlugin("typescript-0.94.0");
+ExportFormatter.fmt.ts = await getPlugin("typescript-0.95.12");
 ExportFormatter.fmt.css = await getPlugin("g-plane/malva-v0.11.2");
 ExportFormatter.fmt.json = await getPlugin("json-0.20.0");
 ExportFormatter.fmt.toml = await getPlugin("toml-0.7.0");
