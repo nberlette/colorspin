@@ -78,10 +78,80 @@ interface ColorVisionDeficiency {
   simulationFunction?: (r: number, g: number, b: number) => [number, number, number]
 }
 
+const COLOR_VISION_DEFICIENCIES: ColorVisionDeficiency[] = [
+  {
+    id: "normal",
+    name: "Normal Vision",
+    description: "No color vision deficiency",
+  },
+  {
+    id: "protanopia",
+    name: "Protanopia",
+    description: "Red-blind (absence of red retinal photoreceptors)",
+    simulationMatrix: [0.567, 0.433, 0, 0.558, 0.442, 0, 0, 0.242, 0.758],
+  },
+  {
+    id: "deuteranopia",
+    name: "Deuteranopia",
+    description: "Green-blind (absence of green retinal photoreceptors)",
+    simulationMatrix: [0.625, 0.375, 0, 0.7, 0.3, 0, 0, 0.3, 0.7],
+  },
+  {
+    id: "tritanopia",
+    name: "Tritanopia",
+    description: "Blue-blind (absence of blue retinal photoreceptors)",
+    simulationMatrix: [0.95, 0.05, 0, 0, 0.433, 0.567, 0, 0.475, 0.525],
+  },
+  {
+    id: "protanomaly",
+    name: "Protanomaly",
+    description: "Red-weak (anomalous red retinal photoreceptors)",
+    simulationMatrix: [0.817, 0.183, 0, 0.333, 0.667, 0, 0, 0.125, 0.875],
+  },
+  {
+    id: "deuteranomaly",
+    name: "Deuteranomaly",
+    description: "Green-weak (anomalous green retinal photoreceptors)",
+    simulationMatrix: [0.8, 0.2, 0, 0.258, 0.742, 0, 0, 0.142, 0.858],
+  },
+  {
+    id: "tritanomaly",
+    name: "Tritanomaly",
+    description: "Blue-weak (anomalous blue retinal photoreceptors)",
+    simulationMatrix: [0.967, 0.033, 0, 0, 0.733, 0.267, 0, 0.183, 0.817],
+  },
+  {
+    id: "achromatopsia",
+    name: "Achromatopsia",
+    description: "Complete color blindness (monochromacy)",
+    simulationFunction: (r, g, b) => {
+      const avg = r * 0.299 + g * 0.587 + b * 0.114
+      return [avg, avg, avg]
+    },
+  },
+  {
+    id: "low-contrast",
+    name: "Low Contrast",
+    description: "Reduced contrast sensitivity",
+    simulationFunction: (r, g, b) => {
+      const avg = r * 0.299 + g * 0.587 + b * 0.114
+      return [r * 0.7 + avg * 0.3, g * 0.7 + avg * 0.3, b * 0.7 + avg * 0.3]
+    },
+  },
+  {
+    id: "blurred-vision",
+    name: "Blurred Vision",
+    description: "Simulates blurred vision",
+  },
+]
+
 export interface AccessibilityProps {
-  title?: string;
-  activeColorVisionDeficiency?: string;
-  setActiveColorVisionDeficiency?(deficiencyId: string): void;
+  title?: string
+  description?: string // Added description prop
+  activeColorVisionDeficiency?: string
+  setActiveColorVisionDeficiency?(deficiencyId: string): void
+  colorVisionDeficiencies: ColorVisionDeficiency[] // Added colorVisionDeficiencies prop
+  getSimulatedColorShades: { shade: number; hex: string }[] // Added getSimulatedColorShades prop
 }
 
 export function ColorVisionDeficiencySimulator({
@@ -89,219 +159,217 @@ export function ColorVisionDeficiencySimulator({
   description = "See how your palette appears to people with different types of color vision deficiencies",
   activeColorVisionDeficiency = "normal",
   setActiveColorVisionDeficiency = (value) => {
-    activeColorVisionDeficiency = value;
+    // This is a placeholder, the actual state update will happen in the parent component.
+    // In a real scenario, you'd likely use a prop setter from the parent.
+    console.log("setActiveColorVisionDeficiency called with:", value)
   },
   colorVisionDeficiencies = [],
   getSimulatedColorShades = [],
 }: AccessibilityProps) {
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="flex flex-wrap gap-2">
+              {colorVisionDeficiencies.map((deficiency) => (
+                <Button
+                  key={deficiency.id}
+                  variant={activeColorVisionDeficiency === deficiency.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveColorVisionDeficiency(deficiency.id)}
+                  className={
+                    deficiency.id === "blurred-vision" && activeColorVisionDeficiency === "blurred-vision"
+                      ? "blur-sm"
+                      : ""
+                  }
+                >
+                  {deficiency.name}
+                </Button>
+              ))}
+            </div>
 
-  return <>
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <div className="flex flex-wrap gap-2">
-            {colorVisionDeficiencies.map((deficiency) => (
-              <Button
-                key={deficiency.id}
-                variant={activeColorVisionDeficiency === deficiency.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActiveColorVisionDeficiency(deficiency.id)}
-                className={deficiency.id === "blurred-vision" && activeColorVisionDeficiency === "blurred-vision" ? "blur-sm" : ""}
-              >
-                {deficiency.name}
-              </Button>
-            ))}
-          </div>
+            <div className="border rounded-lg p-4">
+              <h3 className="text-lg font-medium mb-2">
+                {colorVisionDeficiencies.find((d) => d.id === activeColorVisionDeficiency)?.name || "Normal Vision"}
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                {colorVisionDeficiencies.find((d) => d.id === activeColorVisionDeficiency)?.description ||
+                  "No color vision deficiency"}
+              </p>
 
-          <div className="border rounded-lg p-4">
-            <h3 className="text-lg font-medium mb-2">
-              {colorVisionDeficiencies.find(d => d.id === activeColorVisionDeficiency)?.name || "Normal Vision"}
-            </h3>
-            <p className="text-sm text-gray-500 mb-4">
-              {colorVisionDeficiencies.find(d => d.id === activeColorVisionDeficiency)?.description || "No color vision deficiency"}
-            </p>
-
-            <div className={`space-y-4 ${activeColorVisionDeficiency === "blurred-vision" ? "blur-sm" : ""}`}>
-
-              <div className="flex h-16 rounded-lg overflow-hidden">
-                {getSimulatedColorShades.map(({ shade, hex }) => (
-                  <div
-                    key={shade}
-                    className="flex-1"
-                    style={{ backgroundColor: hex }}
-                    title={`${shade}: ${hex}`}
-                  />
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                {getSimulatedColorShades.map(({ shade, hex }) => (
-                  <div
-                    key={shade}
-                    className="flex flex-col items-center p-2 border rounded"
-                  >
-                    <div className="w-12 h-12 rounded mb-2" style={{ backgroundColor: hex }} />
-                    <div className="text-xs font-medium">{shade}</div>
-                    <div className="text-xs font-mono">{hex}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border rounded-lg p-3">
-                  <h4 className="text-sm font-medium mb-2">Text Sample</h4>
-                  <div className="space-y-2">
-                    {[900, 800, 700, 600, 500].map((shade) => {
-                      const bgColor = getSimulatedColorShades.find(s => s.shade === 50)?.hex || "#FFFFFF";
-                      const textColor = getSimulatedColorShades.find(s => s.shade === shade)?.hex || "#000000";
-                      return (
-                        <div
-                          key={shade}
-                          className="p-2 rounded"
-                          style={{ backgroundColor: bgColor, color: textColor }}
-                        >
-                          <p className="text-sm">Text with {shade} on 50 background</p>
-                        </div>
-                      );
-                    })}
-                  </div>
+              <div className={`space-y-4 ${activeColorVisionDeficiency === "blurred-vision" ? "blur-sm" : ""}`}>
+                <div className="flex h-16 rounded-lg overflow-hidden">
+                  {getSimulatedColorShades.map(({ shade, hex }) => (
+                    <div key={shade} className="flex-1" style={{ backgroundColor: hex }} title={`${shade}: ${hex}`} />
+                  ))}
                 </div>
 
-                <div className="border rounded-lg p-3">
-                  <h4 className="text-sm font-medium mb-2">Button Sample</h4>
-                  <div className="space-y-2">
-                    {[500, 600, 700, 800, 900].map((shade) => {
-                      const bgColor = getSimulatedColorShades.find(s => s.shade === shade)?.hex || "#000000";
-                      const textColor = getSimulatedColorShades.find(s => s.shade === 50)?.hex || "#FFFFFF";
-                      return (
-                        <div
-                          key={shade}
-                          className="p-2 rounded text-center"
-                          style={{ backgroundColor: bgColor, color: textColor }}
-                        >
-                          <p className="text-sm">Text with {shade} on 50 background</p>
-                        </div>
-                      );
-                    })}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {getSimulatedColorShades.map(({ shade, hex }) => (
+                    <div key={shade} className="flex flex-col items-center p-2 border rounded">
+                      <div className="w-12 h-12 rounded mb-2" style={{ backgroundColor: hex }} />
+                      <div className="text-xs font-medium">{shade}</div>
+                      <div className="text-xs font-mono">{hex}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="border rounded-lg p-3">
+                    <h4 className="text-sm font-medium mb-2">Text Sample</h4>
+                    <div className="space-y-2">
+                      {[900, 800, 700, 600, 500].map((shade) => {
+                        const bgColor = getSimulatedColorShades.find((s) => s.shade === 50)?.hex || "#FFFFFF"
+                        const textColor = getSimulatedColorShades.find((s) => s.shade === shade)?.hex || "#000000"
+                        return (
+                          <div
+                            key={shade}
+                            className="p-2 rounded"
+                            style={{ backgroundColor: bgColor, color: textColor }}
+                          >
+                            <p className="text-sm">Text with {shade} on 50 background</p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg p-3">
+                    <h4 className="text-sm font-medium mb-2">Button Sample</h4>
+                    <div className="space-y-2">
+                      {[500, 600, 700, 800, 900].map((shade) => {
+                        const bgColor = getSimulatedColorShades.find((s) => s.shade === shade)?.hex || "#000000"
+                        const textColor = getSimulatedColorShades.find((s) => s.shade === 50)?.hex || "#FFFFFF"
+                        return (
+                          <div
+                            key={shade}
+                            className="p-2 rounded text-center"
+                            style={{ backgroundColor: bgColor, color: textColor }}
+                          >
+                            <p className="text-sm">Text with {shade} on 50 background</p>
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-            
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  </>;
+        </CardContent>
+      </Card>
+    </>
+  )
 }
 
-// Convert hex to HSL - memoized for performance
-const hexToHSL = useCallback((hex: string): [number, number, number] => {
-  // Remove the # if present
-  hex = hex.replace(/^#/, "")
-
-  // Parse the hex values
-  const r = Number.parseInt(hex.substring(0, 2), 16) / 255
-  const g = Number.parseInt(hex.substring(2, 4), 16) / 255
-  const b = Number.parseInt(hex.substring(4, 6), 16) / 255
-
-  // Find min and max values
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-
-  // Calculate lightness
-  let l = (max + min) / 2
-
-  let h = 0
-  let s = 0
-
-  if (max !== min) {
-    // Calculate saturation
-    s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min)
-
-    // Calculate hue
-    if (max === r) {
-      h = (g - b) / (max - min) + (g < b ? 6 : 0)
-    } else if (max === g) {
-      h = (b - r) / (max - min) + 2
-    } else {
-      h = (r - g) / (max - min) + 4
-    }
-    h /= 6
-  }
-
-  // Convert to degrees, percentage, percentage
-  h = Math.round(h * 360)
-  s = Math.round(s * 100)
-  l = Math.round(l * 100)
-
-  return [h, s, l]
-}, [])
-
-// Convert HSL to hex - memoized for performance
-const hslToHex = useCallback((h: number, s: number, l: number): string => {
-  h /= 360
-  s /= 100
-  l /= 100
-
-  let r, g, b
-
-  if (s === 0) {
-    r = g = b = l
-  } else {
-    const hue2rgb = (p: number, q: number, t: number) => {
-      if (t < 0) t += 1
-      if (t > 1) t -= 1
-      if (t < 1 / 6) return p + (q - p) * 6 * t
-      if (t < 1 / 2) return q
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
-      return p
-    }
-
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s
-    const p = 2 * l - q
-
-    r = hue2rgb(p, q, h + 1 / 3)
-    g = hue2rgb(p, q, h)
-    b = hue2rgb(p, q, h - 1 / 3)
-  }
-
-  const toHex = (x: number) => {
-    const hex = Math.round(x * 255).toString(16)
-    return hex.length === 1 ? "0" + hex : hex
-  }
-
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
-}, [])
-
-// Convert hex to RGB
-const hexToRGB = useCallback((hex: string): [number, number, number] => {
-  // Remove the # if present
-  hex = hex.replace(/^#/, "")
-
-  // Parse the hex values
-  const r = Number.parseInt(hex.substring(0, 2), 16)
-  const g = Number.parseInt(hex.substring(2, 4), 16)
-  const b = Number.parseInt(hex.substring(4, 6), 16)
-
-  return [r, g, b]
-}, [])
-
-// Convert RGB to hex
-const rgbToHex = useCallback((r: number, g: number, b: number): string => {
-  const toHex = (x: number) => {
-    const hex = Math.max(0, Math.min(255, Math.round(x))).toString(16)
-    return hex.length === 1 ? "0" + hex : hex
-  }
-
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
-}, []);
-
 export default function ColorPaletteGenerator() {
+  // Convert hex to HSL - memoized for performance
+  const hexToHSL = useCallback((hex: string): [number, number, number] => {
+    // Remove the # if present
+    hex = hex.replace(/^#/, "")
+
+    // Parse the hex values
+    const r = Number.parseInt(hex.substring(0, 2), 16) / 255
+    const g = Number.parseInt(hex.substring(2, 4), 16) / 255
+    const b = Number.parseInt(hex.substring(4, 6), 16) / 255
+
+    // Find min and max values
+    const max = Math.max(r, g, b)
+    const min = Math.min(r, g, b)
+
+    // Calculate lightness
+    let l = (max + min) / 2
+
+    let h = 0
+    let s = 0
+
+    if (max !== min) {
+      // Calculate saturation
+      s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min)
+
+      // Calculate hue
+      if (max === r) {
+        h = (g - b) / (max - min) + (g < b ? 6 : 0)
+      } else if (max === g) {
+        h = (b - r) / (max - min) + 2
+      } else {
+        h = (r - g) / (max - min) + 4
+      }
+      h /= 6
+    }
+
+    // Convert to degrees, percentage, percentage
+    h = Math.round(h * 360)
+    s = Math.round(s * 100)
+    l = Math.round(l * 100)
+
+    return [h, s, l]
+  }, [])
+
+  // Convert HSL to hex - memoized for performance
+  const hslToHex = useCallback((h: number, s: number, l: number): string => {
+    h /= 360
+    s /= 100
+    l /= 100
+
+    let r, g, b
+
+    if (s === 0) {
+      r = g = b = l
+    } else {
+      const hue2rgb = (p: number, q: number, t: number) => {
+        if (t < 0) t += 1
+        if (t > 1) t -= 1
+        if (t < 1 / 6) return p + (q - p) * 6 * t
+        if (t < 1 / 2) return q
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+        return p
+      }
+
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+      const p = 2 * l - q
+
+      r = hue2rgb(p, q, h + 1 / 3)
+      g = hue2rgb(p, q, h)
+      b = hue2rgb(p, q, h - 1 / 3)
+    }
+
+    const toHex = (x: number) => {
+      const hex = Math.round(x * 255).toString(16)
+      return hex.length === 1 ? "0" + hex : hex
+    }
+
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
+  }, [])
+
+  // Convert hex to RGB
+  const hexToRGB = useCallback((hex: string): [number, number, number] => {
+    // Remove the # if present
+    hex = hex.replace(/^#/, "")
+
+    // Parse the hex values
+    const r = Number.parseInt(hex.substring(0, 2), 16)
+    const g = Number.parseInt(hex.substring(2, 4), 16)
+    const b = Number.parseInt(hex.substring(4, 6), 16)
+
+    return [r, g, b]
+  }, [])
+
+  // Convert RGB to hex
+  const rgbToHex = useCallback((r: number, g: number, b: number): string => {
+    const toHex = (x: number) => {
+      const hex = Math.max(0, Math.min(255, Math.round(x))).toString(16)
+      return hex.length === 1 ? "0" + hex : hex
+    }
+
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase()
+  }, [])
+
   // State for multiple color sets
   const [colorSets, setColorSets] = useState<ColorSet[]>([])
   const [activeColorSetId, setActiveColorSetId] = useState<string>("")
@@ -401,32 +469,30 @@ export default function ColorPaletteGenerator() {
         const rect = gradientPreviewRef.current.getBoundingClientRect()
         const x = e.clientX - rect.left
         const width = rect.width
-        
+
         // Calculate position as percentage (clamped between 0-100)
         const position = Math.max(0, Math.min(100, (x / width) * 100))
-        
-        setActiveGradient(prev => ({
+
+        setActiveGradient((prev) => ({
           ...prev,
-          stops: prev.stops.map(stop => 
-            stop.id === activeStopId ? { ...stop, position } : stop
-          )
+          stops: prev.stops.map((stop) => (stop.id === activeStopId ? { ...stop, position } : stop)),
         }))
       }
     }
-    
+
     const handleMouseUp = () => {
       setIsDraggingStop(false)
       setActiveStopId(null)
     }
-    
+
     if (isDraggingStop) {
-      document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mouseup', handleMouseUp)
+      document.addEventListener("mousemove", handleMouseMove)
+      document.addEventListener("mouseup", handleMouseUp)
     }
-    
+
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
     }
   }, [isDraggingStop, activeStopId])
 
@@ -944,17 +1010,17 @@ export default function ColorPaletteGenerator() {
 
   // Update a gradient stop
   const updateGradientStop = (id: string, color?: string, position?: number) => {
-    setActiveGradient(prev => ({
+    setActiveGradient((prev) => ({
       ...prev,
-      stops: prev.stops.map(stop => 
-        stop.id === id 
-          ? { 
-              ...stop, 
+      stops: prev.stops.map((stop) =>
+        stop.id === id
+          ? {
+              ...stop,
               ...(color !== undefined ? { color } : {}),
-              ...(position !== undefined ? { position } : {})
-            } 
-          : stop
-      )
+              ...(position !== undefined ? { position } : {}),
+            }
+          : stop,
+      ),
     }))
   }
 
@@ -1000,7 +1066,7 @@ export default function ColorPaletteGenerator() {
       return
     }
 
-    const newStops = activeGradient.stops.filter(stop => stop.id !== id)
+    const newStops = activeGradient.stops.filter((stop) => stop.id !== id)
     setActiveGradient({
       ...activeGradient,
       stops: newStops,
@@ -1040,357 +1106,321 @@ export default function ColorPaletteGenerator() {
 
   // Handle angle adjustment for linear gradients
   const handleAngleAdjustment = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (activeGradient.type !== 'linear' || !gradientPreviewRef.current) return
-    
+    if (activeGradient.type !== "linear" || !gradientPreviewRef.current) return
+
     const rect = gradientPreviewRef.current.getBoundingClientRect()
     const centerX = rect.left + rect.width / 2
     const centerY = rect.top + rect.height / 2
-    
+
     // Calculate angle based on mouse position relative to center
     const dx = e.clientX - centerX
     const dy = e.clientY - centerY
     const angle = Math.round(Math.atan2(dy, dx) * (180 / Math.PI) + 90) % 360
-    
-    setActiveGradient(prev => ({
+
+    setActiveGradient((prev) => ({
       ...prev,
-      angle
+      angle,
     }))
   }
 
   // Color vision deficiency simulation
-  const colorVisionDeficiencies: ColorVisionDeficiency[] = [
-    {
-      id: "normal",
-      name: "Normal Vision",
-      description: "No color vision deficiency",
-    },
-    {
-      id: "protanopia",
-      name: "Protanopia",
-      description: "Red-blind (absence of red retinal photoreceptors)",
-      simulationMatrix: [0.567, 0.433, 0, 0.558, 0.442, 0, 0, 0.242, 0.758],
-    },
-    {
-      id: "deuteranopia",
-      name: "Deuteranopia",
-      description: "Green-blind (absence of green retinal photoreceptors)",
-      simulationMatrix: [0.625, 0.375, 0, 0.7, 0.3, 0, 0, 0.3, 0.7],
-    },
-    {
-      id: "tritanopia",
-      name: "Tritanopia",
-      description: "Blue-blind (absence of blue retinal photoreceptors)",
-      simulationMatrix: [0.95, 0.05, 0, 0, 0.433, 0.567, 0, 0.475, 0.525],
-    },
-    {
-      id: "protanomaly",
-      name: "Protanomaly",
-      description: "Red-weak (anomalous red retinal photoreceptors)",
-      simulationMatrix: [0.817, 0.183, 0, 0.333, 0.667, 0, 0, 0.125, 0.875],
-    },
-    {
-      id: "deuteranomaly",
-      name: "Deuteranomaly",
-      description: "Green-weak (anomalous green retinal photoreceptors)",
-      simulationMatrix: [0.8, 0.2, 0, 0.258, 0.742, 0, 0, 0.142, 0.858],
-    },
-    {
-      id: "tritanomaly",
-      name: "Tritanomaly",
-      description: "Blue-weak (anomalous blue retinal photoreceptors)",
-      simulationMatrix: [0.967, 0.033, 0, 0, 0.733, 0.267, 0, 0.183, 0.817],
-    },
-    {
-      id: "achromatopsia",
-      name: "Achromatopsia",
-      description: "Complete color blindness (monochromacy)",
-      simulationFunction: (r, g, b) => {
-        const avg = (r * 0.299 + g * 0.587 + b * 0.114);
-        return [avg, avg, avg];
-      },
-    },
-    {
-      id: "low-contrast",
-      name: "Low Contrast",
-      description: "Reduced contrast sensitivity",
-      simulationFunction: (r, g, b) => {
-        const avg = (r * 0.299 + g * 0.587 + b * 0.114);
-        return [
-          r * 0.7 + avg * 0.3,
-          g * 0.7 + avg * 0.3,
-          b * 0.7 + avg * 0.3
-        ];
-      },
-    },
-    {
-      id: "blurred-vision",
-      name: "Blurred Vision",
-      description: "Simulates blurred vision",
-      // This is just a placeholder - actual blur would be applied via CSS
-    }
-  ];
+  const simulateColorVisionDeficiency = useCallback(
+    (hex: string, deficiencyId: string): string => {
+      if (deficiencyId === "normal") return hex
 
-  // Apply color vision deficiency simulation to a color
-  const simulateColorVisionDeficiency = useCallback((hex: string, deficiencyId: string): string => {
-    if (deficiencyId === "normal") return hex;
-    
-    const deficiency = colorVisionDeficiencies.find(d => d.id === deficiencyId);
-    if (!deficiency) return hex;
-    
-    const [r, g, b] = hexToRGB(hex);
-    
-    if (deficiency.simulationFunction) {
-      const [newR, newG, newB] = deficiency.simulationFunction(r, g, b);
-      return rgbToHex(newR, newG, newB);
-    }
-    
-    if (deficiency.simulationMatrix) {
-      const m = deficiency.simulationMatrix;
-      const newR = r * m[0] + g * m[1] + b * m[2];
-      const newG = r * m[3] + g * m[4] + b * m[5];
-      const newB = r * m[6] + g * m[7] + b * m[8];
-      return rgbToHex(newR, newG, newB);
-    }
-    
-    return hex;
-  }, [hexToRGB, rgbToHex]);
+      const deficiency = COLOR_VISION_DEFICIENCIES.find((d) => d.id === deficiencyId)
+      if (!deficiency) return hex
+
+      const [r, g, b] = hexToRGB(hex)
+
+      if (deficiency.simulationFunction) {
+        const [newR, newG, newB] = deficiency.simulationFunction(r, g, b)
+        return rgbToHex(newR, newG, newB)
+      }
+
+      if (deficiency.simulationMatrix) {
+        const m = deficiency.simulationMatrix
+        const newR = r * m[0] + g * m[1] + b * m[2]
+        const newG = r * m[3] + g * m[4] + b * m[5]
+        const newB = r * m[6] + g * m[7] + b * m[8]
+        return rgbToHex(newR, newG, newB)
+      }
+
+      return hex
+    },
+    [hexToRGB, rgbToHex],
+  )
 
   // Apply simulation to all colors in a shade
   const getSimulatedColorShades = useMemo(() => {
-    if (activeColorVisionDeficiency === "normal") return colorShades;
-    
-    return colorShades.map(shade => ({
+    if (activeColorVisionDeficiency === "normal") return colorShades
+
+    return colorShades.map((shade) => ({
       ...shade,
-      hex: simulateColorVisionDeficiency(shade.hex, activeColorVisionDeficiency)
-    }));
-  }, [colorShades, activeColorVisionDeficiency, simulateColorVisionDeficiency]);
+      hex: simulateColorVisionDeficiency(shade.hex, activeColorVisionDeficiency),
+    }))
+  }, [colorShades, activeColorVisionDeficiency, simulateColorVisionDeficiency])
 
   // Generate export code based on format
   const generateExportCode = useCallback(() => {
-    const colorSetsForExport = colorSets.map(set => ({
+    const colorSetsForExport = colorSets.map((set) => ({
       name: set.name.toLowerCase().replace(/\s+/g, "-"),
-      shades: set.shades.reduce((acc, { shade, hex }) => {
-        acc[shade] = hex;
-        return acc;
-      }, {} as Record<number, string>)
-    }));
+      shades: set.shades.reduce(
+        (acc, { shade, hex }) => {
+          acc[shade] = hex
+          return acc
+        },
+        {} as Record<number, string>,
+      ),
+    }))
 
-    let code = '';
+    let code = ""
 
     switch (exportFormat) {
-      case 'css':
-        code = `:root {\n`;
-        colorSetsForExport.forEach(set => {
+      case "css":
+        code = `:root {
+`
+        colorSetsForExport.forEach((set) => {
           Object.entries(set.shades).forEach(([shade, hex]) => {
-            code += `  --color-${set.name}-${shade}: ${hex};\n`;
-          });
-        });
-        
+            code += `  --color-${set.name}-${shade}: ${hex};
+`
+          })
+        })
+
         // Add gradients if any
         if (gradients.length > 0) {
-          code += `\n  /* Gradients */\n`;
+          code += `
+  /* Gradients */
+`
           gradients.forEach((gradient, index) => {
             if (gradient.type === "linear") {
-              code += `  --gradient-${index + 1}: linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+              code += `  --gradient-${index + 1}: linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});
+`
             } else {
-              code += `  --gradient-${index + 1}: radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+              code += `  --gradient-${index + 1}: radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`
             }
-          });
+          })
         }
-        
-        code += `}\n`;
-        break;
-        
-      case 'scss':
-        colorSetsForExport.forEach(set => {
+
+        code += `}
+`
+        break
+
+      case "scss":
+        colorSetsForExport.forEach((set) => {
           Object.entries(set.shades).forEach(([shade, hex]) => {
-            code += `$color-${set.name}-${shade}: ${hex};\n`;
-          });
-          code += '\n';
-        });
-        
+            code += `$color-${set.name}-${shade}: ${hex};\n`
+          })
+          code += "\n"
+        })
+
         // Add gradients if any
         if (gradients.length > 0) {
-          code += `// Gradients\n`;
+          code += `// Gradients\n`
           gradients.forEach((gradient, index) => {
             if (gradient.type === "linear") {
-              code += `$gradient-${index + 1}: linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+              code += `$gradient-${index + 1}: linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`
             } else {
-              code += `$gradient-${index + 1}: radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+              code += `$gradient-${index + 1}: radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`
             }
-          });
+          })
         }
-        break;
-        
-      case 'less':
-        colorSetsForExport.forEach(set => {
+        break
+
+      case "less":
+        colorSetsForExport.forEach((set) => {
           Object.entries(set.shades).forEach(([shade, hex]) => {
-            code += `@color-${set.name}-${shade}: ${hex};\n`;
-          });
-          code += '\n';
-        });
-        
+            code += `@color-${set.name}-${shade}: ${hex};\n`
+          })
+          code += "\n"
+        })
+
         // Add gradients if any
         if (gradients.length > 0) {
-          code += `// Gradients\n`;
+          code += `// Gradients\n`
           gradients.forEach((gradient, index) => {
             if (gradient.type === "linear") {
-              code += `@gradient-${index + 1}: linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+              code += `@gradient-${index + 1}: linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`
             } else {
-              code += `@gradient-${index + 1}: radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`;
+              code += `@gradient-${index + 1}: radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")});\n`
             }
-          });
+          })
         }
-        break;
-        
-      case 'tailwind':
-        code = `/** @type {import('tailwindcss').Config} */\nmodule.exports = {\n  theme: {\n    extend: {\n      colors: {\n`;
-        
-        colorSetsForExport.forEach(set => {
-          code += `        '${set.name}': {\n`;
+        break
+
+      case "tailwind":
+        code = `/** @type {import('tailwindcss').Config} */
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+`
+
+        colorSetsForExport.forEach((set) => {
+          code += `        '${set.name}': {\n`
           Object.entries(set.shades).forEach(([shade, hex]) => {
-            code += `          '${shade}': '${hex}',\n`;
-          });
-          code += `        },\n`;
-        });
-        
-        code += `      },\n`;
-        
+            code += `          '${shade}': '${hex}',\n`
+          })
+          code += `        },\n`
+        })
+
+        code += `      },\n`
+
         // Add gradients as background utilities
         if (gradients.length > 0) {
-          code += `      backgroundImage: {\n`;
+          code += `      backgroundImage: {\n`
           gradients.forEach((gradient, index) => {
             if (gradient.type === "linear") {
-              code += `        'gradient-${index + 1}': 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+              code += `        'gradient-${index + 1}': 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`
             } else {
-              code += `        'gradient-${index + 1}': 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+              code += `        'gradient-${index + 1}': 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`
             }
-          });
-          code += `      },\n`;
+          })
+          code += `      },\n`
         }
-        
-        code += `    },\n  },\n};\n`;
-        break;
-        
-      case 'unocss':
-        code = `// UnoCSS theme configuration\nexport default {\n  theme: {\n    colors: {\n`;
-        
-        colorSetsForExport.forEach(set => {
-          code += `      '${set.name}': {\n`;
+
+        code += `    },\n  },\n};\n`
+        break
+
+      case "unocss":
+        code = `// UnoCSS theme configuration
+export default {
+  theme: {
+    colors: {
+`
+
+        colorSetsForExport.forEach((set) => {
+          code += `      '${set.name}': {\n`
           Object.entries(set.shades).forEach(([shade, hex]) => {
-            code += `        '${shade}': '${hex}',\n`;
-          });
-          code += `      },\n`;
-        });
-        
-        code += `    },\n`;
-        
+            code += `        '${shade}': '${hex}',\n`
+          })
+          code += `      },\n`
+        })
+
+        code += `    },\n`
+
         // Add gradients
         if (gradients.length > 0) {
-          code += `    backgroundImage: {\n`;
+          code += `    backgroundImage: {\n`
           gradients.forEach((gradient, index) => {
             if (gradient.type === "linear") {
-              code += `      'gradient-${index + 1}': 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+              code += `      'gradient-${index + 1}': 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`
             } else {
-              code += `      'gradient-${index + 1}': 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+              code += `      'gradient-${index + 1}': 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`
             }
-          });
-          code += `    },\n`;
+          })
+          code += `    },\n`
         }
-        
-        code += `  },\n};\n`;
-        break;
-        
-      case 'chakra':
-        code = `// Chakra UI theme colors\nexport const colors = {\n`;
-        
-        colorSetsForExport.forEach(set => {
-          code += `  ${set.name}: {\n`;
+
+        code += `  },\n};\n`
+        break
+
+      case "chakra":
+        code = `// Chakra UI theme colors
+export const colors = {
+`
+
+        colorSetsForExport.forEach((set) => {
+          code += `  ${set.name}: {\n`
           Object.entries(set.shades).forEach(([shade, hex]) => {
-            code += `    ${shade}: '${hex}',\n`;
-          });
-          code += `  },\n`;
-        });
-        
-        code += `};\n\n`;
-        
+            code += `    ${shade}: '${hex}',\n`
+          })
+          code += `  },\n`
+        })
+
+        code += `};\n\n`
+
         // Add gradients as custom styles
         if (gradients.length > 0) {
-          code += `// Custom gradients for Chakra UI\nexport const gradients = {\n`;
+          code += `// Custom gradients for Chakra UI
+export const gradients = {
+`
           gradients.forEach((gradient, index) => {
             if (gradient.type === "linear") {
-              code += `  gradient${index + 1}: 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+              code += `  gradient${index + 1}: 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`
             } else {
-              code += `  gradient${index + 1}: 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+              code += `  gradient${index + 1}: 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`
             }
-          });
-          code += `};\n`;
+          })
+          code += `};\n`
         }
-        break;
-        
-      case 'mui':
-        code = `// Material UI theme colors\nimport { createTheme } from '@mui/material/styles';\n\nconst theme = createTheme({\n  palette: {\n`;
-        
-        colorSetsForExport.forEach(set => {
-          code += `    ${set.name}: {\n`;
+        break
+
+      case "mui":
+        code = `// Material UI theme colors
+import { createTheme } from '@mui/material/styles';
+
+const theme = createTheme({
+  palette: {
+`
+
+        colorSetsForExport.forEach((set) => {
+          code += `    ${set.name}: {\n`
           Object.entries(set.shades).forEach(([shade, hex]) => {
-            if (shade === '500') {
-              code += `      main: '${hex}',\n`;
-            } else if (shade === '300') {
-              code += `      light: '${hex}',\n`;
-            } else if (shade === '700') {
-              code += `      dark: '${hex}',\n`;
+            if (shade === "500") {
+              code += `      main: '${hex}',\n`
+            } else if (shade === "300") {
+              code += `      light: '${hex}',\n`
+            } else if (shade === "700") {
+              code += `      dark: '${hex}',\n`
             } else {
-              code += `      ${shade}: '${hex}',\n`;
+              code += `      ${shade}: '${hex}',\n`
             }
-          });
-          code += `    },\n`;
-        });
-        
-        code += `  },\n});\n\n`;
-        
+          })
+          code += `    },\n`
+        })
+
+        code += `  },\n});
+
+`
+
         // Add gradients as custom styles
         if (gradients.length > 0) {
-          code += `// Custom gradients for Material UI\nconst gradients = {\n`;
+          code += `// Custom gradients for Material UI
+const gradients = {
+`
           gradients.forEach((gradient, index) => {
             if (gradient.type === "linear") {
-              code += `  gradient${index + 1}: 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+              code += `  gradient${index + 1}: 'linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`
             } else {
-              code += `  gradient${index + 1}: 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`;
+              code += `  gradient${index + 1}: 'radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})',\n`
             }
-          });
-          code += `};\n`;
+          })
+          code += `};\n`
         }
-        break;
-        
-      case 'json':
+        break
+
+      case "json":
         const jsonData = {
-          colors: colorSetsForExport.reduce((acc, set) => {
-            acc[set.name] = set.shades;
-            return acc;
-          }, {} as Record<string, Record<number, string>>),
+          colors: colorSetsForExport.reduce(
+            (acc, set) => {
+              acc[set.name] = set.shades
+              return acc
+            },
+            {} as Record<string, Record<number, string>>,
+          ),
           gradients: gradients.map((gradient, index) => ({
             name: `gradient-${index + 1}`,
             type: gradient.type,
             angle: gradient.angle,
-            stops: gradient.stops.map(stop => ({
+            stops: gradient.stops.map((stop) => ({
               color: stop.color,
-              position: stop.position
-            }))
-          }))
-        };
-        
-        code = JSON.stringify(jsonData, null, 2);
-        break;
+              position: stop.position,
+            })),
+          })),
+        }
+
+        code = JSON.stringify(jsonData, null, 2)
+        break
     }
 
-    setExportCode(code);
-  }, [colorSets, gradients, exportFormat]);
+    setExportCode(code)
+  }, [colorSets, gradients, exportFormat])
 
   // Update export code when format changes
   useEffect(() => {
-    generateExportCode();
-  }, [exportFormat, generateExportCode]);
+    generateExportCode()
+  }, [exportFormat, generateExportCode])
 
   return (
     <div className="space-y-8">
@@ -1423,7 +1453,7 @@ export default function ColorPaletteGenerator() {
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
                 <Code className="h-4 w-4" />
                 <span>Export</span>
               </Button>
@@ -1437,7 +1467,9 @@ export default function ColorPaletteGenerator() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="flex items-center gap-4">
-                  <Label htmlFor="export-format" className="min-w-24">Format:</Label>
+                  <Label htmlFor="export-format" className="min-w-24">
+                    Format:
+                  </Label>
                   <Select value={exportFormat} onValueChange={setExportFormat}>
                     <SelectTrigger id="export-format" className="w-full">
                       <SelectValue placeholder="Select format" />
@@ -1456,25 +1488,20 @@ export default function ColorPaletteGenerator() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="export-code">Code:</Label>
-                  <Textarea
-                    id="export-code"
-                    value={exportCode}
-                    readOnly
-                    className="font-mono text-sm h-64"
-                  />
+                  <Textarea id="export-code" value={exportCode} readOnly className="font-mono text-sm h-64" />
                 </div>
                 <div className="flex justify-end">
                   <Button
                     onClick={() => {
-                      navigator.clipboard.writeText(exportCode);
+                      navigator.clipboard.writeText(exportCode)
                       toast({
                         title: "Copied to clipboard",
                         description: "Export code has been copied to your clipboard",
                         duration: 1500,
-                      });
+                      })
                     }}
                   >
-                    <Copy className="h-4 w-4 mr-2" />
+                    <Copy className="h-4 w-4 mr-1" />
                     Copy to Clipboard
                   </Button>
                 </div>
@@ -1495,7 +1522,7 @@ export default function ColorPaletteGenerator() {
             <span>Color Harmonies</span>
           </TabsTrigger>
           <TabsTrigger value="gradients" className="flex items-center gap-2">
-   z         <Droplets className="h-4 w-4" />
+            <Droplets className="h-4 w-4" />
             <span>Gradients</span>
           </TabsTrigger>
           <TabsTrigger value="accessibility" className="flex items-center gap-2">
@@ -1569,7 +1596,7 @@ export default function ColorPaletteGenerator() {
                         variant="outline"
                         size="sm"
                         onClick={randomizeColor}
-                        className="text-xs"
+                        className="text-xs bg-transparent"
                         disabled={isRandomizing}
                       >
                         <RefreshCw className={`h-3 w-3 mr-1 ${isRandomizing ? "animate-spin" : ""}`} />
@@ -1963,7 +1990,7 @@ export default function ColorPaletteGenerator() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-xs"
+                    className="text-xs bg-transparent"
                     onClick={() => {
                       // Add all colors from this harmony to the palette
                       harmony.colors.forEach((color) => {
@@ -2042,18 +2069,18 @@ export default function ColorPaletteGenerator() {
                   </div>
                 )}
 
-                <Button variant="outline" size="sm" onClick={addGradientStop} className="ml-auto">
+                <Button variant="outline" size="sm" onClick={addGradientStop} className="ml-auto bg-transparent">
                   <Plus className="h-4 w-4 mr-1" />
                   Add Stop
                 </Button>
               </div>
 
               {/* Interactive gradient preview */}
-              <div 
+              <div
                 ref={gradientPreviewRef}
-                className="h-32 rounded-lg mb-4 relative cursor-pointer" 
+                className="h-32 rounded-lg mb-4 relative cursor-pointer"
                 style={{ background: getGradientCSS() }}
-                onClick={activeGradient.type === 'linear' ? handleAngleAdjustment : undefined}
+                onClick={activeGradient.type === "linear" ? handleAngleAdjustment : undefined}
               >
                 {/* Gradient stops */}
                 {activeGradient.stops.map((stop) => (
@@ -2065,21 +2092,23 @@ export default function ColorPaletteGenerator() {
                     title={`${stop.color} at ${stop.position}%`}
                   />
                 ))}
-                
+
                 {/* Angle indicator for linear gradients */}
-                {activeGradient.type === 'linear' && (
-                  <div 
+                {activeGradient.type === "linear" && (
+                  <div
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
                     title={`${activeGradient.angle}°`}
                   >
                     <div className="relative w-16 h-16">
-                      <div 
+                      <div
                         className="absolute w-1 h-16 bg-white/50 rounded-full left-1/2 top-0 -translate-x-1/2 origin-bottom"
                         style={{ transform: `rotate(${activeGradient.angle}deg)` }}
                       />
-                      <div 
+                      <div
                         className="absolute w-4 h-4 bg-white border-2 border-black dark:border-white rounded-full left-1/2 top-0 -translate-x-1/2 -translate-y-1/2"
-                        style={{ transform: `rotate(0deg) translate(0, 0) rotate(${activeGradient.angle}deg) translate(0, -32px)` }}
+                        style={{
+                          transform: `rotate(0deg) translate(0, 0) rotate(${activeGradient.angle}deg) translate(0, -32px)`,
+                        }}
                       />
                     </div>
                   </div>
@@ -2093,7 +2122,7 @@ export default function ColorPaletteGenerator() {
                     <div className="w-8 h-8 rounded" style={{ backgroundColor: stop.color }} />
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className="font-mono text-xs">
+                        <Button variant="outline" size="sm" className="font-mono text-xs bg-transparent">
                           {stop.color}
                         </Button>
                       </PopoverTrigger>
@@ -2194,15 +2223,14 @@ export default function ColorPaletteGenerator() {
         </TabsContent>
 
         <TabsContent value="accessibility" className="space-y-6">
-          <ColorVisionDeficiencySimulator {{
-            getSimulatedColorShades,
-            activeColorVisionDeficiency,
-            setActiveColorVisionDeficiency,
-            simulateColorVisionDeficiency,
-            
-          }} />
+          <ColorVisionDeficiencySimulator
+            colorVisionDeficiencies={COLOR_VISION_DEFICIENCIES}
+            activeColorVisionDeficiency={activeColorVisionDeficiency}
+            setActiveColorVisionDeficiency={setActiveColorVisionDeficiency}
+            getSimulatedColorShades={getSimulatedColorShades}
+          />
         </TabsContent>
       </Tabs>
     </div>
-  );
-};
+  )
+}
