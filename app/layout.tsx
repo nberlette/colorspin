@@ -13,7 +13,7 @@ const inconsolata = Inconsolata({
 export const metadata: Metadata = {
   title: "Tailwind Color Palette Generator",
   description: "Generate beautiful color palettes for your Tailwind CSS projects",
-    generator: 'v0.dev'
+    generator: 'v0.app'
 }
 
 export default function RootLayout({

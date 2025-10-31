@@ -80,6 +80,7 @@ export function ColorPaletteGenerator() {
                 colorSets={state.colorSets}
                 activeColorSetId={state.activeColorSetId}
                 onSelectColorSet={setActiveColorSet}
+                onAddColorSet={addColorSet}
                 onDeleteColorSet={deleteColorSet}
               />
             </div>
@@ -95,26 +96,26 @@ export function ColorPaletteGenerator() {
         </div>
       )}
 
-      {activeTab === "gradients" && (
+      {activeTab === "gradients" && activeGradient && (
         <div className="mt-4">
           <GradientEditor
-            colorSets={state.colorSets}
+            colorShades={activeColorSet?.shades || []}
             gradients={state.gradients}
             activeGradient={activeGradient}
             onUpdateGradient={updateGradient}
             onAddGradient={addGradient}
             onDeleteGradient={deleteGradient}
-            onAddStop={(color, position) => activeGradient && addGradientStop(activeGradient.id, color, position)}
-            onUpdateStop={(stopId, updates) => activeGradient && updateGradientStop(activeGradient.id, stopId, updates)}
-            onRemoveStop={(stopId) => activeGradient && removeGradientStop(activeGradient.id, stopId)}
-            getGradientCSS={() => activeGradient && getGradientCSS(activeGradient)}
+            onAddStop={(color, position) => addGradientStop(activeGradient.id, color, position)}
+            onUpdateStop={(stopId, updates) => updateGradientStop(activeGradient.id, stopId, updates)}
+            onRemoveStop={(stopId) => removeGradientStop(activeGradient.id, stopId)}
+            getGradientCSS={() => getGradientCSS(activeGradient)}
           />
         </div>
       )}
 
-      {activeTab === "accessibility" && (
+      {activeTab === "accessibility" && activeColorSet && (
         <div className="mt-4">
-          <VisionSimulator colorSets={state.colorSets} />
+          <VisionSimulator colorShades={activeColorSet.shades} />
         </div>
       )}
     </div>

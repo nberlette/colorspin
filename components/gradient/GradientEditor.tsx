@@ -12,6 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import type { ColorShade } from "@/types/color"
 import type { Gradient, GradientStop } from "@/types/gradient"
 import { motion } from "framer-motion"
@@ -30,6 +38,25 @@ interface GradientEditorProps {
   getGradientCSS: () => string
 }
 
+function generateGradientName(gradient: Gradient): string {
+  if (gradient.stops.length === 0) return "Empty Gradient"
+
+  // Sort stops by position
+  const sortedStops = [...gradient.stops].sort((a, b) => a.position - b.position)
+
+  // Get color names (simplified - just use hex for now)
+  const colorNames = sortedStops.map((stop) => stop.color)
+
+  // Create descriptive name based on number of stops
+  if (colorNames.length === 2) {
+    return `${colorNames[0]} to ${colorNames[1]}`
+  } else if (colorNames.length === 3) {
+    return `${colorNames[0]} to ${colorNames[2]}, via ${colorNames[1]}`
+  } else {
+    return `${colorNames[0]} to ${colorNames[colorNames.length - 1]} (${colorNames.length} stops)`
+  }
+}
+
 export function GradientEditor({
   colorShades,
   gradients,
@@ -46,6 +73,9 @@ export function GradientEditor({
   const [isDraggingStop, setIsDraggingStop] = useState(false)
   const [activeStopId, setActiveStopId] = useState<string | null>(null)
   const gradientPreviewRef = useRef<HTMLDivElement>(null)
+
+  const [isNamingDialogOpen, setIsNamingDialogOpen] = useState(false)
+  const [gradientName, setGradientName] = useState("")
 
   // Find the active stop
   const activeStop = activeGradient.stops.find((stop) => stop.id === activeStopId)
@@ -90,8 +120,7 @@ export function GradientEditor({
     // Calculate position as percentage
     const position = Math.max(0, Math.min(100, (x / width) * 100))
 
-    // Use a color from the active color set if available
-    const newColor = colorShades[4]?.hex || "#808080"
+    const newColor = colorShades && colorShades.length > 4 ? colorShades[4].hex : "#808080"
 
     const newStopId = onAddStop(newColor, position)
     setActiveStopId(newStopId)
@@ -120,6 +149,26 @@ export function GradientEditor({
     toast({
       title: "Copied to clipboard",
       description: "Gradient CSS has been copied to your clipboard",
+      duration: 1500,
+    })
+  }
+
+  const handleSaveGradient = () => {
+    // Generate default name
+    const defaultName = generateGradientName(activeGradient)
+    setGradientName(defaultName)
+    setIsNamingDialogOpen(true)
+  }
+
+  const confirmSaveGradient = () => {
+    // Update gradient name before saving
+    onUpdateGradient({ name: gradientName })
+    onAddGradient()
+    setIsNamingDialogOpen(false)
+
+    toast({
+      title: "Gradient Saved",
+      description: `"${gradientName}" has been added to your collection`,
       duration: 1500,
     })
   }
@@ -167,7 +216,10 @@ export function GradientEditor({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onAddStop(colorShades[1]?.hex || "#FFFFFF", 50)}
+              onClick={() => {
+                const newColor = colorShades && colorShades.length > 1 ? colorShades[1].hex : "#FFFFFF"
+                onAddStop(newColor, 50)
+              }}
               className="ml-auto"
             >
               <Plus className="h-4 w-4 mr-1" />
@@ -180,7 +232,7 @@ export function GradientEditor({
             ref={gradientPreviewRef}
             className="h-32 rounded-lg mb-4 relative cursor-pointer"
             style={{ background: getGradientCSS() }}
-            onClick={activeGradient.type === "linear" ? handleAngleAdjustment : undefined}
+            onClick={activeGradient.type === "linear" ? handleAngleAdjustment : handleGradientBarClick}
           >
             {/* Gradient stops */}
             {activeGradient.stops.map((stop) => (
@@ -228,7 +280,7 @@ export function GradientEditor({
                 <div className="w-8 h-8 rounded" style={{ backgroundColor: stop.color }} />
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="font-mono text-xs">
+                    <Button variant="outline" size="sm" className="font-mono text-xs bg-transparent">
                       {stop.color}
                     </Button>
                   </PopoverTrigger>
@@ -274,13 +326,42 @@ export function GradientEditor({
               <Copy className="h-4 w-4 mr-1" />
               Copy CSS
             </Button>
-            <Button onClick={onAddGradient} variant="default" size="sm">
+            <Button onClick={handleSaveGradient} variant="default" size="sm">
               <Plus className="h-4 w-4 mr-1" />
               Save Gradient
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isNamingDialogOpen} onOpenChange={setIsNamingDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Name Your Gradient</DialogTitle>
+            <DialogDescription>Give your gradient a memorable name to easily identify it later.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="gradient-name">Gradient Name</Label>
+              <Input
+                id="gradient-name"
+                value={gradientName}
+                onChange={(e) => setGradientName(e.target.value)}
+                placeholder="Enter gradient name"
+              />
+            </div>
+            <div className="h-16 rounded-lg" style={{ background: getGradientCSS() }} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNamingDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmSaveGradient} disabled={!gradientName.trim()}>
+              Save Gradient
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {gradients.length > 0 && (
         <div className="space-y-4">
@@ -304,45 +385,50 @@ export function GradientEditor({
                         : `radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})`,
                   }}
                 />
-                <div className="p-3 flex items-center justify-between bg-gray-50 dark:bg-gray-800">
-                  <div className="text-sm">
-                    {gradient.type === "linear" ? (
-                      <span>
-                        {gradient.angle}° linear, {gradient.stops.length} stops
-                      </span>
-                    ) : (
-                      <span>Radial, {gradient.stops.length} stops</span>
-                    )}
+                <div className="p-3 bg-gray-50 dark:bg-gray-800">
+                  <div className="font-medium text-sm mb-1 truncate" title={gradient.name}>
+                    {gradient.name}
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        const css =
-                          gradient.type === "linear"
-                            ? `linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})`
-                            : `radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})`
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs text-muted-foreground">
+                      {gradient.type === "linear" ? (
+                        <span>
+                          {gradient.angle}° linear, {gradient.stops.length} stops
+                        </span>
+                      ) : (
+                        <span>Radial, {gradient.stops.length} stops</span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const css =
+                            gradient.type === "linear"
+                              ? `linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})`
+                              : `radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})`
 
-                        navigator.clipboard.writeText(css)
-                        toast({
-                          title: "Copied to clipboard",
-                          description: "Gradient CSS has been copied",
-                          duration: 1500,
-                        })
-                      }}
-                    >
-                      <Copy className="h-3 w-3 mr-1" />
-                      Copy
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-500"
-                      onClick={() => onDeleteGradient(gradient.id)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                          navigator.clipboard.writeText(css)
+                          toast({
+                            title: "Copied to clipboard",
+                            description: "Gradient CSS has been copied",
+                            duration: 1500,
+                          })
+                        }}
+                      >
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500"
+                        onClick={() => onDeleteGradient(gradient.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
