@@ -3,27 +3,18 @@
 import { Check, AlertCircle } from "lucide-react"
 import type { ColorShade } from "@/types/color"
 import { ContrastCalculator } from "@/lib/accessibility/ContrastCalculator"
-import { motion } from "framer-motion"
 
 interface AccessibilityCheckerProps {
   colorShades: ColorShade[]
 }
 
 export function AccessibilityChecker({ colorShades }: AccessibilityCheckerProps) {
-  // Calculate accessibility scores
   const accessibilityScores = ContrastCalculator.calculatePaletteAccessibility(colorShades)
-
-  // Get passing and failing combinations
   const passingCombinations = ContrastCalculator.getPassingCombinations(accessibilityScores)
   const failingCombinations = ContrastCalculator.getFailingCombinations(accessibilityScores)
 
   return (
-    <motion.div
-      className="border p-4 rounded-lg"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.4 }}
-    >
+    <div className="border p-4 rounded-lg animate-in fade-in slide-in-from-bottom-4 duration-300 delay-400">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium">Accessibility Pairs</h3>
         <div className="text-xs text-gray-500">
@@ -32,7 +23,6 @@ export function AccessibilityChecker({ colorShades }: AccessibilityCheckerProps)
       </div>
 
       <div className="space-y-4">
-        {/* Passing combinations */}
         <div>
           <h4 className="text-sm font-medium text-green-600 dark:text-green-400 mb-2 flex items-center">
             <Check className="h-4 w-4 mr-1" /> Accessible Combinations
@@ -87,7 +77,6 @@ export function AccessibilityChecker({ colorShades }: AccessibilityCheckerProps)
           </div>
         </div>
 
-        {/* Failing combinations */}
         <div>
           <h4 className="text-sm font-medium text-red-600 dark:text-red-400 mb-2 flex items-center">
             <AlertCircle className="h-4 w-4 mr-1" /> Inaccessible Combinations
@@ -142,6 +131,6 @@ export function AccessibilityChecker({ colorShades }: AccessibilityCheckerProps)
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }

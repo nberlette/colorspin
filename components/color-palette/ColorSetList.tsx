@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import { Plus, Trash2 } from "lucide-react"
 import type { ColorSet } from "@/types/color"
 
@@ -22,16 +21,14 @@ export function ColorSetList({
   return (
     <div className="flex flex-wrap gap-2 mb-4">
       {colorSets.map((set) => (
-        <motion.button
+        <button
           key={set.id}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all hover:scale-[1.02] active:scale-[0.98] ${
             set.id === activeColorSetId
               ? "border-primary bg-primary/10"
               : "border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
           }`}
           onClick={() => onSelectColorSet(set.id)}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
         >
           <div className="w-4 h-4 rounded-full" style={{ backgroundColor: set.baseColor }} />
           <span>{set.name}</span>
@@ -46,18 +43,16 @@ export function ColorSetList({
               <Trash2 className="h-3 w-3" />
             </button>
           )}
-        </motion.button>
+        </button>
       ))}
 
-      <motion.button
-        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+      <button
+        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 hover:scale-105 active:scale-95 transition-all"
         onClick={onAddColorSet}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
       >
         <Plus className="h-4 w-4" />
         <span>Add Color</span>
-      </motion.button>
+      </button>
     </div>
   )
 }

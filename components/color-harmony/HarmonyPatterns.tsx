@@ -4,7 +4,6 @@ import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { ColorHarmony } from "@/types/color"
 import { ColorHarmonyGenerator } from "@/lib/color/ColorHarmony"
-import { motion } from "framer-motion"
 import { useToast } from "@/components/ui/use-toast"
 
 interface HarmonyPatternsProps {
@@ -26,10 +25,8 @@ export function HarmonyPatterns({ baseColor, onAddColorSet }: HarmonyPatternsPro
   }
 
   const handleAddAllColors = (harmony: ColorHarmony) => {
-    // Add all colors from this harmony to the palette
     harmony.colors.forEach((color) => {
       if (color !== baseColor) {
-        // Skip the base color
         onAddColorSet(color)
       }
     })
@@ -44,13 +41,10 @@ export function HarmonyPatterns({ baseColor, onAddColorSet }: HarmonyPatternsPro
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {harmonies.map((harmony, index) => (
-        <motion.div
+        <div
           key={harmony.name}
-          className="border rounded-lg overflow-hidden"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 * index }}
-          whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)" }}
+          className="border rounded-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 hover:-translate-y-1 hover:shadow-xl transition-all"
+          style={{ animationDelay: `${index * 100}ms` }}
         >
           <div className="p-4">
             <h3 className="font-bold text-lg">{harmony.name}</h3>
@@ -80,12 +74,17 @@ export function HarmonyPatterns({ baseColor, onAddColorSet }: HarmonyPatternsPro
               ))}
             </div>
 
-            <Button variant="outline" size="sm" className="text-xs" onClick={() => handleAddAllColors(harmony)}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs bg-transparent"
+              onClick={() => handleAddAllColors(harmony)}
+            >
               <Plus className="h-3 w-3 mr-1" />
               Add All
             </Button>
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   )

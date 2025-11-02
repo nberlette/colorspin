@@ -10,7 +10,6 @@ import { Slider } from "@/components/ui/slider"
 import { Input } from "@/components/ui/input"
 import type { ColorSet } from "@/types/color"
 import { ColorManipulator } from "@/lib/color/ColorManipulator"
-import { motion } from "framer-motion"
 
 interface ColorSetEditorProps {
   colorSet: ColorSet
@@ -91,18 +90,8 @@ export function ColorSetEditor({ colorSet, onChange }: ColorSetEditorProps) {
   }
 
   return (
-    <motion.div
-      className="space-y-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <motion.div
-        className="space-y-4 border p-4 rounded-lg"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="space-y-4 border p-4 rounded-lg animate-in fade-in slide-in-from-bottom-4 duration-300 delay-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="font-medium">Base Color</h3>
@@ -114,17 +103,21 @@ export function ColorSetEditor({ colorSet, onChange }: ColorSetEditorProps) {
             />
           </div>
           <div className="flex items-center gap-2">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button variant="outline" size="sm" onClick={randomizeColor} className="text-xs" disabled={isRandomizing}>
+            <div className="hover:scale-105 active:scale-95 transition-transform">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={randomizeColor}
+                className="text-xs bg-transparent"
+                disabled={isRandomizing}
+              >
                 <RefreshCw className={`h-3 w-3 mr-1 ${isRandomizing ? "animate-spin" : ""}`} />
                 Randomize
               </Button>
-            </motion.div>
-            <motion.div
-              className="w-8 h-8 rounded"
+            </div>
+            <div
+              className="w-8 h-8 rounded transition-colors duration-300"
               style={{ backgroundColor: colorSet.baseColor }}
-              animate={{ backgroundColor: colorSet.baseColor }}
-              transition={{ duration: 0.3 }}
             />
           </div>
         </div>
@@ -141,13 +134,11 @@ export function ColorSetEditor({ colorSet, onChange }: ColorSetEditorProps) {
         </div>
 
         <div className="flex items-center space-x-2">
-          <motion.div
-            className="w-8 h-8 rounded"
+          <div
+            className="w-8 h-8 rounded transition-colors duration-300"
             style={{ backgroundColor: colorSet.baseColor }}
-            animate={{ backgroundColor: colorSet.baseColor }}
-            transition={{ duration: 0.3 }}
           />
-          <motion.input
+          <input
             type="text"
             value={inputValue}
             onChange={(e) => {
@@ -166,30 +157,13 @@ export function ColorSetEditor({ colorSet, onChange }: ColorSetEditorProps) {
             placeholder="#RRGGBB"
           />
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div
-        className="space-y-4"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-      >
-        <motion.div
-          className="space-y-2"
-          whileHover={{ scale: 1.01 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        >
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300 delay-200">
+        <div className="space-y-2 hover:scale-[1.01] transition-transform">
           <div className="flex justify-between">
             <label className="text-sm font-medium">Vibrancy</label>
-            <motion.span
-              className="text-sm text-gray-500"
-              animate={{
-                x: vibrancy === 50 ? [0, 5, -5, 5, -5, 0] : 0,
-                transition: { duration: vibrancy === 50 ? 0.5 : 0 },
-              }}
-            >
-              {vibrancy}%
-            </motion.span>
+            <span className="text-sm text-gray-500">{vibrancy}%</span>
           </div>
           <Slider
             value={[vibrancy]}
@@ -200,24 +174,12 @@ export function ColorSetEditor({ colorSet, onChange }: ColorSetEditorProps) {
             onValueCommit={handleVibrancyCommit}
             className="transition-all duration-150 ease-out"
           />
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="space-y-2"
-          whileHover={{ scale: 1.01 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        >
+        <div className="space-y-2 hover:scale-[1.01] transition-transform">
           <div className="flex justify-between">
             <label className="text-sm font-medium">Hue Shift</label>
-            <motion.span
-              className="text-sm text-gray-500"
-              animate={{
-                x: hueShift === 0 ? [0, 5, -5, 5, -5, 0] : 0,
-                transition: { duration: hueShift === 0 ? 0.5 : 0 },
-              }}
-            >
-              {hueShift}°
-            </motion.span>
+            <span className="text-sm text-gray-500">{hueShift}°</span>
           </div>
           <Slider
             value={[hueShift]}
@@ -228,8 +190,8 @@ export function ColorSetEditor({ colorSet, onChange }: ColorSetEditorProps) {
             onValueCommit={handleHueShiftCommit}
             className="transition-all duration-150 ease-out"
           />
-        </motion.div>
-      </motion.div>
-    </motion.div>
+        </div>
+      </div>
+    </div>
   )
 }

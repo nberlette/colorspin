@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/dialog"
 import type { ColorShade } from "@/types/color"
 import type { Gradient, GradientStop } from "@/types/gradient"
-import { motion } from "framer-motion"
 import { useToast } from "@/components/ui/use-toast"
 
 interface GradientEditorProps {
@@ -41,13 +40,9 @@ interface GradientEditorProps {
 function generateGradientName(gradient: Gradient): string {
   if (gradient.stops.length === 0) return "Empty Gradient"
 
-  // Sort stops by position
   const sortedStops = [...gradient.stops].sort((a, b) => a.position - b.position)
-
-  // Get color names (simplified - just use hex for now)
   const colorNames = sortedStops.map((stop) => stop.color)
 
-  // Create descriptive name based on number of stops
   if (colorNames.length === 2) {
     return `${colorNames[0]} to ${colorNames[1]}`
   } else if (colorNames.length === 3) {
@@ -77,10 +72,8 @@ export function GradientEditor({
   const [isNamingDialogOpen, setIsNamingDialogOpen] = useState(false)
   const [gradientName, setGradientName] = useState("")
 
-  // Find the active stop
   const activeStop = activeGradient.stops.find((stop) => stop.id === activeStopId)
 
-  // Handle gradient stop dragging
   const handleStopMouseDown = (e: React.MouseEvent, stopId: string) => {
     e.preventDefault()
     setIsDraggingStop(true)
@@ -93,7 +86,6 @@ export function GradientEditor({
       const x = e.clientX - rect.left
       const width = rect.width
 
-      // Calculate position as percentage (clamped between 0-100)
       const position = Math.max(0, Math.min(100, (x / width) * 100))
 
       onUpdateStop(stopId, { position })
@@ -109,7 +101,6 @@ export function GradientEditor({
     document.addEventListener("mouseup", handleMouseUp)
   }
 
-  // Handle gradient bar click to add a new stop
   const handleGradientBarClick = (e: React.MouseEvent) => {
     if (isDraggingStop || !gradientPreviewRef.current) return
 
@@ -117,7 +108,6 @@ export function GradientEditor({
     const x = e.clientX - rect.left
     const width = rect.width
 
-    // Calculate position as percentage
     const position = Math.max(0, Math.min(100, (x / width) * 100))
 
     const newColor = colorShades && colorShades.length > 4 ? colorShades[4].hex : "#808080"
@@ -126,7 +116,6 @@ export function GradientEditor({
     setActiveStopId(newStopId)
   }
 
-  // Handle angle adjustment for linear gradients
   const handleAngleAdjustment = (e: React.MouseEvent<HTMLDivElement>) => {
     if (activeGradient.type !== "linear" || !gradientPreviewRef.current) return
 
@@ -134,7 +123,6 @@ export function GradientEditor({
     const centerX = rect.left + rect.width / 2
     const centerY = rect.top + rect.height / 2
 
-    // Calculate angle based on mouse position relative to center
     const dx = e.clientX - centerX
     const dy = e.clientY - centerY
     const angle = Math.round(Math.atan2(dy, dx) * (180 / Math.PI) + 90) % 360
@@ -142,7 +130,6 @@ export function GradientEditor({
     onUpdateGradient({ angle })
   }
 
-  // Copy gradient CSS to clipboard
   const copyGradientCSS = () => {
     const css = getGradientCSS()
     navigator.clipboard.writeText(css)
@@ -154,14 +141,12 @@ export function GradientEditor({
   }
 
   const handleSaveGradient = () => {
-    // Generate default name
     const defaultName = generateGradientName(activeGradient)
     setGradientName(defaultName)
     setIsNamingDialogOpen(true)
   }
 
   const confirmSaveGradient = () => {
-    // Update gradient name before saving
     onUpdateGradient({ name: gradientName })
     onAddGradient()
     setIsNamingDialogOpen(false)
@@ -227,14 +212,12 @@ export function GradientEditor({
             </Button>
           </div>
 
-          {/* Interactive gradient preview */}
           <div
             ref={gradientPreviewRef}
             className="h-32 rounded-lg mb-4 relative cursor-pointer"
             style={{ background: getGradientCSS() }}
             onClick={activeGradient.type === "linear" ? handleAngleAdjustment : handleGradientBarClick}
           >
-            {/* Gradient stops */}
             {activeGradient.stops.map((stop) => (
               <div
                 key={stop.id}
@@ -251,7 +234,6 @@ export function GradientEditor({
               />
             ))}
 
-            {/* Angle indicator for linear gradients */}
             {activeGradient.type === "linear" && (
               <div
                 className="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -367,14 +349,11 @@ export function GradientEditor({
         <div className="space-y-4">
           <h3 className="text-lg font-bold">Saved Gradients</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {gradients.map((gradient) => (
-              <motion.div
+            {gradients.map((gradient, index) => (
+              <div
                 key={gradient.id}
-                className="border rounded-lg overflow-hidden"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)" }}
+                className="border rounded-lg overflow-hidden animate-in fade-in zoom-in-95 duration-300 hover:-translate-y-1 hover:shadow-xl transition-all"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div
                   className="h-24"
@@ -431,7 +410,7 @@ export function GradientEditor({
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
