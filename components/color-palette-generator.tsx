@@ -113,19 +113,46 @@ export default function ColorPaletteGenerator() {
   useEffect(() => {
     const activeSet = colorSets.find((set) => set.id === activeColorSetId)
     if (activeSet) {
-      setBaseColor(activeSet.baseColor)
-      setVibrancy(activeSet.vibrancy)
-      setHueShift(activeSet.hueShift)
-      setColorSetName(activeSet.name)
-      setInputValue(activeSet.baseColor)
+      if (activeSet.baseColor !== baseColor) {
+        setBaseColor(activeSet.baseColor)
+        setInputValue(activeSet.baseColor)
+      }
+      if (activeSet.vibrancy !== vibrancy) {
+        setVibrancy(activeSet.vibrancy)
+      }
+      if (activeSet.hueShift !== hueShift) {
+        setHueShift(activeSet.hueShift)
+      }
+      if (activeSet.name !== colorSetName) {
+        setColorSetName(activeSet.name)
+      }
     }
-  }, [activeColorSetId, colorSets])
+  }, [activeColorSetId])
 
   // Update color set when base color, vibrancy, or hue shift changes
   useEffect(() => {
     if (activeColorSetId) {
-      setColorSets((prevSets) =>
-        prevSets.map((set) =>
+      setColorSets((prevSets) => {
+        const activeSet = prevSets.find((set) => set.id === activeColorSetId)
+        if (!activeSet) {
+          return prevSets
+        }
+
+        const shadesChanged =
+          activeSet.shades.length !== colorShades.length ||
+          activeSet.shades.some((shade, index) => shade.hex !== colorShades[index]?.hex)
+
+        if (
+          activeSet.baseColor === baseColor &&
+          activeSet.vibrancy === vibrancy &&
+          activeSet.hueShift === hueShift &&
+          activeSet.name === colorSetName &&
+          !shadesChanged
+        ) {
+          return prevSets
+        }
+
+        return prevSets.map((set) =>
           set.id === activeColorSetId
             ? {
                 ...set,
@@ -136,8 +163,8 @@ export default function ColorPaletteGenerator() {
                 shades: colorShades,
               }
             : set,
-        ),
-      )
+        )
+      })
     }
   }, [baseColor, vibrancy, hueShift, colorShades, colorSetName, activeColorSetId])
 

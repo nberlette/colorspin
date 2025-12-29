@@ -6,6 +6,8 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+    --font-inconsolata: "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono",
+      "Courier New", monospace;
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;

@@ -1,14 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inconsolata } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
-
-const inconsolata = Inconsolata({
-  subsets: ["latin"],
-  variable: "--font-inconsolata",
-})
 
 export const metadata: Metadata = {
   title: "Tailwind Color Palette Generator",
@@ -23,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inconsolata.className}>
+      <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
           <Toaster />
