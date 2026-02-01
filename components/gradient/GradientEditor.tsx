@@ -123,16 +123,15 @@ export function GradientEditor({
     const centerX = rect.left + rect.width / 2
     const centerY = rect.top + rect.height / 2
 
-    const dx = e.clientX - centerX
-    const dy = e.clientY - centerY
+    const dx = e.clientX - centerX, dy = e.clientY - centerY
     const angle = Math.round(Math.atan2(dy, dx) * (180 / Math.PI) + 90) % 360
 
     onUpdateGradient({ angle })
   }
 
-  const copyGradientCSS = () => {
+  const copyGradientCSS = async () => {
     const css = getGradientCSS()
-    navigator.clipboard.writeText(css)
+    await navigator.clipboard.writeText(css)
     toast({
       title: "Copied to clipboard",
       description: "Gradient CSS has been copied to your clipboard",
@@ -180,8 +179,8 @@ export function GradientEditor({
               </SelectContent>
             </Select>
 
-            {activeGradient.type === "linear" && (
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              {activeGradient.type === "linear" ? <>
                 <Label htmlFor="angle" className="text-sm">
                   Angle:
                 </Label>
@@ -195,8 +194,19 @@ export function GradientEditor({
                   className="w-20"
                 />
                 <span className="text-sm">degrees</span>
-              </div>
-            )}
+              </> : <>
+                <Label htmlFor="shape" className="text-sm">Shape</Label>
+                <Select id="shape" value={activeGradient.shape} onValueChange={(shape) => onUpdateGradient({ shape })}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Shape" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="circle">circle</SelectItem>
+                    <SelectItem value="ellipse">ellipse</SelectItem>
+                  </SelectContent>
+                </Select>
+              </>}
+            </div>
 
             <Button
               variant="outline"
@@ -306,11 +316,11 @@ export function GradientEditor({
           <div className="flex items-center gap-2 mt-4">
             <Button onClick={copyGradientCSS} variant="secondary" size="sm">
               <Copy className="h-4 w-4 mr-1" />
-              Copy CSS
+              Copy
             </Button>
             <Button onClick={handleSaveGradient} variant="default" size="sm">
               <Plus className="h-4 w-4 mr-1" />
-              Save Gradient
+              Save
             </Button>
           </div>
         </CardContent>
@@ -361,7 +371,7 @@ export function GradientEditor({
                     background:
                       gradient.type === "linear"
                         ? `linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})`
-                        : `radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})`,
+                        : `radial-gradient(${gradient.shape}, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})`,
                   }}
                 />
                 <div className="p-3 bg-gray-50 dark:bg-gray-800">
@@ -369,14 +379,10 @@ export function GradientEditor({
                     {gradient.name}
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="text-xs text-muted-foreground">
-                      {gradient.type === "linear" ? (
-                        <span>
-                          {gradient.angle}° linear, {gradient.stops.length} stops
-                        </span>
-                      ) : (
-                        <span>Radial, {gradient.stops.length} stops</span>
-                      )}
+                    <div className="flex flex-row justify-around gap-x-2 flex-nowrap text-xs text-muted-foreground">
+                      <span>{gradient.type}</span>
+                      <span>{gradient.stops.length} stops</span>
+                      {gradient.type === "linear" ? <code>{gradient.angle}°</code> : <code>{gradient.shape}</code>}
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -386,7 +392,7 @@ export function GradientEditor({
                           const css =
                             gradient.type === "linear"
                               ? `linear-gradient(${gradient.angle}deg, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})`
-                              : `radial-gradient(circle, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})`
+                              : `radial-gradient(${gradient.shape}, ${gradient.stops.map((stop) => `${stop.color} ${stop.position}%`).join(", ")})`
 
                           navigator.clipboard.writeText(css)
                           toast({
